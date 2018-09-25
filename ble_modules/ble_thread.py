@@ -20,7 +20,7 @@ def thread_recv_data(mainArgObj):
 	ctlObj = mainArgObj._threadCtlObj
 	
 	remainDataList = []
-	#testCount = 0
+	testCount = 0
 	while ctlObj._needQuit != True:
 		
 		if uartObj.uartOk() != True:
@@ -60,13 +60,15 @@ def thread_recv_data(mainArgObj):
 					"""
 					testCount += 1
 					
-					if testCount % 2 == 0:
+					if testCount % 10 == 0:
 						helloParserDataObj = comm_cls.HCI_QUEUE_DATA_LIST_CLASS()
 						helloParserDataObj._time = get_time_stamp()
-						helloParserDataObj._dataList = ['0x4','0x3e','0x13','0x1','0x0','0x1','0x0','0x0',\
-						                                '0x0','0xc9','0x2e','0x1f','0xdc','0x8c','0x0c','0x6', \
-														'0x0','0x0','0x0','0x0','0x1','0x0' ]
+						#helloParserDataObj._dataList = ['0x4','0x3e','0x13','0x1','0x0','0x1','0x0','0x0',\
+						#                                '0x0','0xc9','0x2e','0x1f','0xdc','0x8c','0x0c','0x6', \
+						#								'0x0','0x0','0x0','0x0','0x1','0x0' ]
+						helloParserDataObj._dataList = ['0x4', '0x3e', '0x1a', '0xd', '0x1', '0x22', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x9c', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0']
 						toParserQueue.put(helloParserDataObj)
+						#print "send extend adv...."
 					"""
 					mainArgObj._data_2_parser_queue_lock.release()
 					offset += (curLen + 3)
@@ -104,7 +106,7 @@ def thread_parse_data(mainArgObj):
 	advMsgQueue = Queue.Queue()
 	nonAdvMsgQueue = Queue.Queue()
 	while ctlObj._needQuit != True:
-		
+		hasNonAdvQueue = False
 		try:
 			dataRecvList = data_from_queue.get(block=True, timeout=2)
 			if isinstance(dataRecvList, comm_cls.HCI_QUEUE_DATA_LIST_CLASS) == True:
@@ -116,8 +118,10 @@ def thread_parse_data(mainArgObj):
 						advMsgQueue.put(dataRecvList)
 					else:
 						nonAdvMsgQueue.put(dataRecvList)
+						hasNonAdvQueue = True
 				else:
 					nonAdvMsgQueue.put(dataRecvList)
+					hasNonAdvQueue = True
 			else:
 				print "error to get data from uart recv thread...."
 				continue
@@ -291,9 +295,15 @@ def thread_parse_data(mainArgObj):
 						mainArgObj._connectionList.append(connectItem)
 						mainArgObj._advDeviceListObj.markAdvDevOn(connectItem._bdAddr, connectItem._connectHandle, connectItem._role, connectItem._peerAddrType)
 						#print "add connect device"
-		
 		#3.	process adv
-		if advMsgQueue.qsize() > 0:
+		advQueueSize = 0
+		if hasNonAdvQueue == False and advMsgQueue.qsize() > 0: #if no non-adv then process all adv event
+			
+			advQueueSize = advMsgQueue.qsize()
+		elif advMsgQueue.qsize() > 0:
+			advQueueSize = 1
+		#print "advQueueSize:",advQueueSize
+		for i in range(advQueueSize):		
 			temMsgObj = advMsgQueue.get()
 			packetType = int(temMsgObj._dataList[0], 16)
 			eventCode = int(temMsgObj._dataList[1], 16)
@@ -326,7 +336,7 @@ def thread_parse_data(mainArgObj):
 				#add or update adv list
 				mainArgObj._advDeviceListObj.addDevice(advDevList)
 				mainArgObj._advDeviceBdaddrList.append(advDevList[0])
-			#"""			
+						
 		
 	print "Thread < %s > quit..." % name
 	pass

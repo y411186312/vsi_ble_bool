@@ -53,11 +53,29 @@ class HCI_CONNECT_EVENT_CLASS(object):	# if get LE_Connection_Complete event wil
 		self._bdAddr = []		#6B 
 		self._localRpa = []		#6B for enhanced connection
 		self._peerRpa = []		#6B for enhanced connection
-		self._connInterval = 0	#2B integer
-		self._connLatency = 0	#2B integer
-		self._timeout = 0		#2B integer
-		self._masterClkAccuracy = 0 #1B
+		self._connInterval = 0x0000	#2B integer
+		self._connLatency = 0x0000	#2B integer
+		self._timeout = 0x0000		#2B integer
+		self._masterClkAccuracy = 0x00 #1B
 
+
+class HCI_EXTEND_ADV_DEV_CLASS(object):		
+	def __init__(self):
+		self._subEventCode = 0x00
+		self._numReports = 0x00
+		self._eventType = 0x0000
+		self._addrType = 0x00
+		self._addr = [] #6b
+		self._primaryPhy = 0x00
+		self._secondaryPhy = 0x00
+		self._advSid = 0x00
+		self._txPower = 0x00
+		self._rssi = 0x00
+		self._periodicAdvInterval = 0x0000
+		self._directAddrType = 0x00
+		self._directAddr = [] #6b
+		self._dataLen = 0x00
+		self._data = []	#max 16b
 		
 """	
 class HCI_EVENT_CLASS(object):

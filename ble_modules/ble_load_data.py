@@ -286,10 +286,10 @@ class Ble_LoadCmdClass:
 						if self._subEventJsonObj != None:
 							#print "para._name:",para._name
 							#print "self._subEventJsonObj[para._name]:",self._subEventJsonObj[para._name]
-							#print "::::::::::",self._subEventJsonObj.get(para._name)
+							#print "::::::::::",para._name
 							if self._subEventJsonObj.get(para._name) != None:
 								para._subEventCode = int(self._subEventJsonObj[para._name], 16)
-								#print "get subevent code...."
+								#print "get subevent code [%s]....:%d"%(para._name, para._subEventCode)
 						self._eventsList.append(para)
 					else:
 						para._isCmd = True

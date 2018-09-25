@@ -155,13 +155,15 @@ class Ble_eventParser:
 		eventCode = int(self._headerList[1], 16)
 		subEvtCode = int(self._payloadList[0], 16)
 		#print "subEvtCode:",subEvtCode
-		for i in range(len(self._evtList)):		
+		for i in range(len(self._evtList)):	
+			#print "i:",i
 			if eventCode == self._evtList[i]._eventCode:
 				if eventCode == 0x3e:
 					if subEvtCode != self._evtList[i]._subEventCode:
 						continue
 				
 				self._curEvent = self._evtList[i]
+				#print "self._curEvent.name:",self._curEvent._name
 				self._outArrayList.append(['Event', "%#.2x --> %s" %(eventCode, self._evtList[i]._name)])
 				break
 		
@@ -178,7 +180,9 @@ class Ble_eventParser:
 			if subEvtCode == 2:
 				self.parser_adv_event(subEvtCode)
 			elif subEvtCode == 0x1 or subEvtCode == 0xa:
-				self.parser_connect_event(self._headerList + self._payloadList)
+				self.parser_connect_event(subEvtCode)
+			elif subEvtCode == 0xd:
+				self.parser_extend_adv_event(subEvtCode)
 		
 	def parser_connect_status_event(self):
 		#1. len
@@ -245,8 +249,9 @@ class Ble_eventParser:
 			
 		
 			
-	def parser_connect_event(self, dataList):
+	def parser_connect_event(self, subEvtCode):
 		#print "connect..."
+		dataList = self._headerList + self._payloadList
 		offset = 3
 		subEvtCode = int(dataList[offset], 16)
 		try:
@@ -328,8 +333,30 @@ class Ble_eventParser:
 				break	#remove the same handle object, may be update
 		self._connectionList.append(connnect)
 		"""
+	def parser_extend_adv_event(self, subEvtCode):
+		#1. len
+		#print "Enter extend adv..."
+		totalLen = int(self._headerList[2], 16)
+		self._outArrayList.append(['Parameter Total Length', "%#.2x"%totalLen])
+		offset = 0
+		#2. sub
+		realLen = 0
+		for i in range(len(self._curEvent._paraSizeLists)):
+			curItemSize = self._curEvent._paraSizeLists[i]
+			if self._curEvent._paraSizeLists[i] == 1:
+				realLen = int(self._payloadList[offset], 16)	#for variety len item
+			if self._curEvent._paraFixLenFlagLists[i] == 0:
+				curItemSize = realLen
+			valueStr = ''
+			for j in range(curItemSize):
+				valueStr += "%#.2x "% int(self._payloadList[offset+curItemSize-j-1], 16)
+				
+			self._outArrayList.append([self._curEvent._paraNameLists[i], "%s"%valueStr])
+			offset += curItemSize
+			
 		
 	def parser_adv_event(self, subEvtCode):
+		#print "adv....."
 		#1. len
 		totalLen = int(self._headerList[2], 16)
 		self._outArrayList.append(['Parameter Total Length', "%#.2x"%totalLen])

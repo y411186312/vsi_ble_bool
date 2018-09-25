@@ -28,6 +28,7 @@ class MAIN_ARGS_CLASS(object):
 		self._loadSpecObj = load_cls.Ble_LoadCmdClass(specFolder, bleSubEvtJsonFPath, cmdDefvalueFilePath)
 		self._connectionList = []	#HCI_CONNECT_EVENT_CLASS obj list
 		self._advDeviceList = []	#HCI_ADV_DEVICE_CLASS obj list
+		self._extendAdvDeviceList = []	#HCI_EXTEND_ADV_DEV_CLASS obj list
 		self._bdAddrList = []
 		self._portIsConnect = False
 		#self._parser2AclQueue = Queue.Queue()	#send start time
