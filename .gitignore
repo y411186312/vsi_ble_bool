@@ -1,0 +1,4 @@
+*.pyc
+.gitignore
+/test
+/test_repo
