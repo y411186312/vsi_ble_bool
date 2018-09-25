@@ -1,0 +1,5 @@
+	{"HCI_Read_Failed_Contact_Counter",0x01,3,{{"Status",1,1},{"Connection_Handle",2,1},{"Failed_Contact_Counter",2,1}}},
+	{"HCI_Reset_Failed_Contact_Counter",0x02,2,{{"Status",1,1},{"Connection_Handle",2,1}}},
+	{"HCI_Read_Link_Quality",0x03,3,{{"Status",1,1},{"Connection_Handle",2,1},{"Link_Quality",1,1}}},
+	{"HCI_Read_RSSI",0x05,3,{{"Status",1,1},{"Connection_Handle",2,1},{"RSSI",1,1}}},
+	{"HCI_Read_Clock",0x07,4,{{"Status",1,1},{"Connection_Handle",2,1},{"Clock",4,1},{"Accuracy",2,1}}},
