@@ -43,3 +43,8 @@ class MAIN_ARGS_CLASS(object):
 		self._advDeviceListObj = None
 		self._messsageLogObj = None
 		self._displayStatusObj = None
+		
+		#acl
+		self._aclBufferSize = 0
+		self._aclBufferCount = 0
+		self._parserToAclCommunicateObj = comm_cls.HCI_PARSER_2_ACL_COMMUNICATE_CLASS()

@@ -36,7 +36,7 @@ class Ble_cmdTreeListCtrlClass(wx.Frame):
 		
 		#cmdClsList cmdClsFileName should be keep in touch with
 		minX = windowSize[0] * 1 / 3
-		minY = windowSize[1] * 5 / 8
+		minY = windowSize[1] * 5 / 8 -50
 		self.treeNode = [[]] * len(cmdClsList)
 	
 		#gui part

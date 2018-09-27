@@ -1,4 +1,4 @@
-
+import threading
 
 ACK_RECV_DATA_FLAG=0
 ACK_RECV_ACK_FLAG=1
@@ -76,6 +76,27 @@ class HCI_EXTEND_ADV_DEV_CLASS(object):
 		self._directAddr = [] #6b
 		self._dataLen = 0x00
 		self._data = []	#max 16b
+		
+class HCI_ACL_THREAD_RUN_CLASS(object):
+	def __init__(self):
+		self._packetSize = 0
+		self._packetNum = 0
+		self._connectHandle = 0
+		self._allDataLen = 0	#for recv
+		self._headerStrList = [] # for send
+		self._firstPacketList = []
+		self._pbFlag = 0		#for send
+		self._bcFlag = 0		#for send
+		
+		
+class HCI_PARSER_2_ACL_COMMUNICATE_CLASS(object):
+	def __init__(self):
+		self._ack = False	#send to set False, parser to set TRUE
+		self._lock = threading.Lock()
+		self._time = 0			#for recv
+		self._numOfCompletePackets = 0	#for send
+		self._connectHandle = 0
+		
 		
 """	
 class HCI_EVENT_CLASS(object):
