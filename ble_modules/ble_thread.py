@@ -227,6 +227,13 @@ def thread_parse_data(mainArgObj):
 						mainArgObj._advDeviceListObj.clearAllAdv()
 						mainArgObj._connectionList = []
 						mainArgObj._advDeviceBdaddrList = []
+					elif oprCode == 0x2002: #read_le_buffer_size
+						mainArgObj._aclBufferSize = int(temMsgObj._dataList[7], 16) & 0xff
+						mainArgObj._aclBufferSize |= (int(temMsgObj._dataList[8], 16) & 0xff )<< 8 
+						mainArgObj._aclBufferCount = int(temMsgObj._dataList[9], 16) & 0xff
+						#print "mainArgObj._aclBufferSize:",mainArgObj._aclBufferSize
+						#print "mainArgObj._aclBufferNum:",mainArgObj._aclBufferNum
+						
 					elif oprCode == 0x1009: #read_bd_addr
 						status = int(temMsgObj._dataList[6], 16)
 						if status == 0:

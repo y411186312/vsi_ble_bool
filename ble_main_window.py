@@ -22,8 +22,8 @@ class MainWindow(wx.Frame):
 	def InitUI(self):
 		#1. menubar options
 		#1.1 Create menubar
-		minWinSize = (1100, 700)
-		menuBarObj = Ble_MenuBar(self._mainArgObj)	
+		minWinSize = (1100, 720)
+		menuBarObj = Ble_MenuBar(minWinSize, self._mainArgObj)	
 		self.SetMenuBar(menuBarObj._menuBar)
 		#1.2 bind function
 		
@@ -67,6 +67,7 @@ class MainWindow(wx.Frame):
 		self.SetSize(minWinSize)
 		self.SetMinSize(minWinSize)
 		self.SetMaxSize((minWinSize[0], minWinSize[1]+100))
+		#self.SetMaxSize((minWinSize[0], -1))
 		
 		self.icon = wx.Icon("res\\verisilicon.ico", wx.BITMAP_TYPE_ICO)
 		self.SetIcon(self.icon) 
