@@ -64,10 +64,11 @@ class Ble_eventParser:
 			dirStr = '[RX] <---'
 			
 		elif type == 2:
+			#print "direction:",direction
 			typeStr = 'ACL'
 			dirStr = '[TX] --->'
 			if direction == 1:
-				dirStr = '[RX] --->'
+				dirStr = '[RX] <---'
 		else:
 			typeStr = 'Unknown Type'
 			dirStr = '<--->'
@@ -183,6 +184,30 @@ class Ble_eventParser:
 				self.parser_connect_event(subEvtCode)
 			elif subEvtCode == 0xd:
 				self.parser_extend_adv_event(subEvtCode)
+		elif eventCode == 0x13:
+			self.parser_num_complete_packet_evnet()
+			
+	def parser_num_complete_packet_evnet(self):
+		#1. len
+		totalLen = int(self._headerList[2], 16)
+		self._outArrayList.append(['Parameter Total Length', "%#.2x"%totalLen])
+		
+		offset = 0
+		self._curEvent
+		varityLen = 0
+		for i in range(len(self._curEvent._paraNameLists)):
+			curValueStr = ''
+			curLen = self._curEvent._paraSizeLists[i]
+			if curLen == 1:
+				varityLen = int(self._payloadList[offset], 16)
+			if self._curEvent._paraFixLenFlagLists[i] == 0:
+				curLen = varityLen
+			for j in range(curLen):
+				curValueStr += "%s " % hex(int(self._payloadList[offset + curLen - 1 - j], 16))
+			self._outArrayList.append(['%s' % self._curEvent._paraNameLists[i], "%s"%curValueStr])
+			offset += curLen
+		#
+		#returnObj = None
 		
 	def parser_connect_status_event(self):
 		#1. len

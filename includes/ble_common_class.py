@@ -25,7 +25,7 @@ class HCI_SPEC_CLASS(object):
 class HCI_QUEUE_DATA_LIST_CLASS(object):
 	def __init__(self):
 		self._time = ''
-		self._direction = 0
+		self._direction = 0 #0 send 1 for recv
 		self._dataList = []
 class HCI_THREAD_CTL_CLASS(object):
 	def __init__(self):
@@ -82,6 +82,9 @@ class HCI_ACL_THREAD_RUN_CLASS(object):
 		self._packetSize = 0
 		self._packetNum = 0
 		self._connectHandle = 0
+		self._curValueIsValued = False
+		self._startTime = 0 #for recv
+		self._curRecvPacketCnt = 0 # for recv
 		self._allDataLen = 0	#for recv
 		self._headerStrList = [] # for send
 		self._firstPacketList = []
@@ -94,8 +97,11 @@ class HCI_PARSER_2_ACL_COMMUNICATE_CLASS(object):
 		self._ack = False	#send to set False, parser to set TRUE
 		self._lock = threading.Lock()
 		self._time = 0			#for recv
-		self._numOfCompletePackets = 0	#for send
-		self._connectHandle = 0
+		self._aclBufferCount = 0
+		self._aclBufferSize = 0
+		self._completeNum = 0
+		self._connectHandlesCompleteLists = []	#for send, could calc all complete packets in cur handle
+		self._connectHandlesList = []
 		
 		
 """	

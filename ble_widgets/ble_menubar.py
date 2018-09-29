@@ -111,16 +111,17 @@ class Ble_MenuBar(wx.Frame):
 	def OnAclTrasfer(self, evt):
 	
 		id = evt.GetId()
-		print "id:",id
+		#print "id:",id
 		isSend = True
 		if id == 120:
-			print "Tx"
+			#print "Tx"
+			isSend = True
 		elif id == 121:
 			isSend = False
 			print "Rx"
 		else:
 			return
-		print "isSend:",isSend
+		#print "isSend:",isSend
 		aclTransferObj = None
 		if isSend == True:
 			aclTransferObj = Ble_aclTransferClass(None, "Send Data", self._windowSize, self._mainArgObj)
@@ -128,11 +129,13 @@ class Ble_MenuBar(wx.Frame):
 		else:
 			aclTransferObj = Ble_aclTransferClass(None, "Receive Data", self._windowSize, self._mainArgObj)
 			aclTransferObj.setRxMode()
-			
+		self._mainArgObj._aclDataTransferObj = aclTransferObj
+		self._mainArgObj._aclGuiHasBeenQuited = False
 		#aclTransferObj.Show()
 		if aclTransferObj.ShowModal() == wx.ID_YES:
 			self.Close(True)
 		aclTransferObj.Destroy()
+		self._mainArgObj._aclGuiHasBeenQuited =True
 	def OnAboutDisplay(self, evt):
 		evtObj = evt.GetEventObject()
 		id = evt.GetId()
