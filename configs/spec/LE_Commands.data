@@ -40,7 +40,7 @@
 	{"HCI_LE_Enhanced_Receiver_Test",0x33,3,{{"RX_Frequency",1,1},{"Phy",1,1},{"Modulation_Index",1,1}}},
 	{"HCI_LE_Enhanced_Transmitter_Test",0x34,4,{{"TX_Frequency",1,1},{"Length_Of_Test_Data",1,1},{"Packet_Payload",1,1}, ,{"Phy",1,1}}},
 	{"HCI_LE_Set_Advertising_Set_Random_Addr",0x35,2,{{"Advertising_Handle",1,1},{"Advertising_Random_Address",6,1}}},
-	{"HCI_LE_Set_Extended_Adv_Parameters",0x36,13,{{"Advertising_Handle",1,1},{"Advertising_Event_Properties",2,1},{"Primary_Adv_Interval_Min",3,1},{"Primary_Adv_Interval_Max",3,1},{"Primary_Adv_Channel_Map",1,1},{"Own_Addr_Type   Peer_Addr_Type",2,1},{"Peer_Address",6,1},{"Adv_Filter_Policy",1,1},{"Adv_Tx_Power",1,1},{"Prim_adv_phy",1,1},{"Sec_Adv_Max_Skip",1,1},{"Sec_Adv_Phy",1,1},{"Adv_SID",1,1},{"Scan_Req_Notification_Enable",1,1}}},
+	{"HCI_LE_Set_Extended_Adv_Parameters",0x36,14,{{"Advertising_Handle",1,1},{"Advertising_Event_Properties",2,1},{"Primary_Adv_Interval_Min",3,1},{"Primary_Adv_Interval_Max",3,1},{"Primary_Adv_Channel_Map",1,1},{"Own_Addr_Type   Peer_Addr_Type",2,1},{"Peer_Address",6,1},{"Adv_Filter_Policy",1,1},{"Adv_Tx_Power",1,1},{"Prim_adv_phy",1,1},{"Sec_Adv_Max_Skip",1,1},{"Sec_Adv_Phy",1,1},{"Adv_SID",1,1},{"Scan_Req_Notification_Enable",1,1}}},
 	{"HCI_LE_Set_Extended_Adv_Data",0x37,5,{{"Advertising_Handle",1,1},{"Advertising_Operation",1,1},{"Fragment_Perference",1,1},{"Adv_Data_Length",1,1},{"Adv_Data1",31,0}}},
 	{"HCI_LE_Set_Extended_Scan_Rsp_Data",0x38,5,{{"Advertising_Handle",1,1},{"Operation",1,1},{"Fragment_Preference",1,1},{"Scan_Response_Data_Length",1,1},{"Scan_Response_Data",31,0}}},
 	{"HCI_LE_Set_Extended_Adv_Enable",0x39,4,{{"Advertising_Enable",1,1},{"Number_Of_Sets",1,1},{"Advertising_Handle",1,1},{"Duration",2,1},{"Max_Extended_Advertising_Events",1,1}}},	

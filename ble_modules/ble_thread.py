@@ -79,10 +79,10 @@ def thread_recv_data(mainArgObj):
 					#print "put queue"
 					mainArgObj._data_2_parser_queue_lock.acquire()
 					toParserQueue.put(toParserDataObj)
-					"""
+					#"""
 					testCount += 1
 					
-					if testCount % 10 == 0:
+					if testCount % 5 == 0:
 						helloParserDataObj = comm_cls.HCI_QUEUE_DATA_LIST_CLASS()
 						helloParserDataObj._time = get_time_stamp()
 						#helloParserDataObj._dataList = ['0x4','0x3e','0x13','0x1','0x0','0x1','0x0','0x0',\
@@ -91,7 +91,7 @@ def thread_recv_data(mainArgObj):
 						helloParserDataObj._dataList = ['0x4', '0x3e', '0x1a', '0xd', '0x1', '0x22', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x9c', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0']
 						toParserQueue.put(helloParserDataObj)
 						#print "send extend adv...."
-					"""
+					#"""
 					mainArgObj._data_2_parser_queue_lock.release()
 					offset += (curLen + 3)
 					continue
@@ -136,14 +136,17 @@ def thread_parse_data(mainArgObj):
 	
 	while ctlObj._needQuit != True:
 		hasNonAdvQueue = False
+		#"""
 		try:
 			dataRecvList = data_from_queue.get(block=True, timeout=2)
+			#print "subEvtCode::::", int(dataRecvList._dataList[3], 16)
 			if isinstance(dataRecvList, comm_cls.HCI_QUEUE_DATA_LIST_CLASS) == True:
 				packetType = int(dataRecvList._dataList[0], 16)
 				if packetType == 0x4:
 					eventCode = int(dataRecvList._dataList[1], 16)
 					subEvtCode = int(dataRecvList._dataList[3], 16)
-					if eventCode == 0x3e and subEvtCode == 0x02:
+					#print "subEvtCode:",subEvtCode
+					if eventCode == 0x3e and (subEvtCode == 0x02 or subEvtCode == 0xd): #adv or extend adv
 						advMsgQueue.put(dataRecvList)
 					else:
 						nonAdvMsgQueue.put(dataRecvList)
@@ -160,6 +163,7 @@ def thread_parse_data(mainArgObj):
 				continue
 			#else:
 			#	print "process adv event................."
+		"""
 		qsize = data_from_queue.qsize()
 		for i in range(qsize):
 			dataRecvList = data_from_queue.get()
@@ -168,7 +172,7 @@ def thread_parse_data(mainArgObj):
 				if packetType == 0x4:
 					eventCode = int(dataRecvList._dataList[1], 16)
 					subEvtCode = int(dataRecvList._dataList[3], 16)
-					if eventCode == 0x3e and subEvtCode == 0x02:
+					if eventCode == 0x3e and (subEvtCode == 0x02 or subEvtCode == 0xd):
 						advMsgQueue.put(dataRecvList)
 					else:
 						nonAdvMsgQueue.put(dataRecvList)
@@ -177,7 +181,7 @@ def thread_parse_data(mainArgObj):
 			else:
 				print "error to get data from uart recv thread...."
 				continue
-			
+		"""
 		#2. process all non-adv
 		qsize = nonAdvMsgQueue.qsize()
 		for i in range(qsize):
@@ -388,6 +392,8 @@ def thread_parse_data(mainArgObj):
 			temMsgObj = advMsgQueue.get()
 			packetType = int(temMsgObj._dataList[0], 16)
 			eventCode = int(temMsgObj._dataList[1], 16)
+			subEventCode = int(temMsgObj._dataList[3], 16)
+			#print "subEventCode:",subEventCode
 			messageLogList =  mainArgObj._parserObj.getMessageLog(temMsgObj._time, \
 				                                                      temMsgObj._direction, \
 																	  temMsgObj._dataList)
@@ -398,8 +404,9 @@ def thread_parse_data(mainArgObj):
 				statusParserList = mainArgObj._parserObj.getMessagePaserResult(temMsgObj._dataList)
 				mainArgObj._displayStatusObj.addDetail(statusParserList)
 			
-			
+			#if subEventCode == 0x1:
 			advDevList = mainArgObj._parserObj.getAdvDeviceList(temMsgObj._dataList)
+			#elif subEventCode == 0x1:
 			if advDevList != None:
 				
 				hasBeenAdded = False

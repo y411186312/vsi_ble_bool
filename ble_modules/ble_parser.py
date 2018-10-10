@@ -467,16 +467,27 @@ class Ble_eventParser:
 				offset += curItemSize
 		else:
 			self._outArrayList.append(['Status', "%#.2x --> Unknown Command"%status])
-	def getAdvDeviceList(self, dataList):
+	def getAdvDeviceList(self, dataList): #adv or extend adv
 		#self._evtList = eventList
+		subEventCode = int(dataList[3], 16)
+		
+		#print "subEventCode:",subEventCode
 		
 		payloadStrList = dataList[3:]
 		advOutList = []
 		tempStr = ''
 		allLen = len(payloadStrList)
 		#print "allLen:",allLen
+		
+		#if subEventCode == 0xd: #extend adv
+			
+		#	return
+		
 		#1. bd addr 
 		offset = 4
+		if subEventCode == 0xd:
+			offset += 1
+			
 		curLen = 6
 		if offset + curLen >= allLen - 1:
 			return None
@@ -490,17 +501,29 @@ class Ble_eventParser:
 		advOutList.append(tempStr)	#empty
 		
 		#3. adv type
-		offset = 3
-		tempStr = "%#.2x " % int(payloadStrList[offset], 16)
-		advOutList.append(tempStr)
-		
+		if subEventCode == 0xd:
+			offset = 2
+			advType = int(payloadStrList[offset], 16) & 0xff
+			advType |= ((int(payloadStrList[offset+1], 16) & 0xff ) << 8)
+			tempStr = "%#.2x " % advType
+			advOutList.append(tempStr)
+		else:
+			offset = 2
+			tempStr = "%#.2x " % int(payloadStrList[offset], 16)
+			advOutList.append(tempStr)
+			
 		#4. Addr type
-		offset = 4
+		offset = 3
+		if subEventCode == 0xd:
+			offset += 1
+		
 		tempStr = "%#.2x " % int(payloadStrList[offset], 16)
 		advOutList.append(tempStr)
 		
 		#5. RSSI
 		offset = allLen - 1
+		if subEventCode == 0xd:
+			offset = 15
 		tempStr = "%d " % int(payloadStrList[offset], 16)
 		advOutList.append(tempStr)
 		
@@ -508,5 +531,18 @@ class Ble_eventParser:
 		tempStr = ''
 		advOutList.append(tempStr)
 		
+		#7 ext adv
+		#"""
+		tempStr = '0'
+		if subEventCode == 0xd:
+			tempStr = '1'
+		
+		advOutList.append(tempStr)
+		#"""
+		
+
 		return advOutList
+		
+		
+			
 		

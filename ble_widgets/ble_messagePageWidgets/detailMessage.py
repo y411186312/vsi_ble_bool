@@ -10,7 +10,7 @@ class Ble_DetailMsgListCtrlClass(wx.Frame):
 		
 		
 		#1. create ListCtrl
-		self._listObj = wx.ListCtrl(self._panel, -1, wx.DefaultPosition, size=(windowSize[0]-10, windowSize[1]/2-80),style = wx.LC_REPORT |wx.LC_AUTOARRANGE)
+		self._listObj = wx.ListCtrl(self._panel, -1, wx.DefaultPosition, size=(windowSize[0]-10, windowSize[1]/2-100),style = wx.LC_REPORT |wx.LC_AUTOARRANGE)
 		
 		
 		#2. set column title

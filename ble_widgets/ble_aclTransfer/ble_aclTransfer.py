@@ -265,11 +265,11 @@ class Ble_aclTransferClass(wx.Dialog):
 		content = self.packetSize_text.GetLineText(0)
 		try:
 			threadRunObj._packetSize = packetSize = int(content)
-			if threadRunObj._packetSize <= 0 or threadRunObj._packetSize > 27:
-				self.displayErrorDlg('Packet Size', 'dex digital (0, 27]')
+			if threadRunObj._packetSize <= 0 or threadRunObj._packetSize > 251:
+				self.displayErrorDlg('Packet Size', 'dex digital (0, 251]')
 				return None
 		except:
-			self.displayErrorDlg('Packet Size', 'dex digital (0, 27]')
+			self.displayErrorDlg('Packet Size', 'dex digital (0, 251]')
 			return None
 			
 		#4. packet cnt
