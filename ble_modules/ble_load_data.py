@@ -233,6 +233,14 @@ class Ble_LoadCmdClass:
 	def _getReturnParaList(self):
 		return self._returnParaList
 	
+	def _printCmdParaList(self):
+		for i in range(len(self._cmdsList)):
+			print "name: %s, oprcode:%x" % (self._cmdsList[i]._name, self._cmdsList[i]._oprCode)
+	
+	def _printReturnParaList(self):
+		for i in range(len(self._returnParaList)):
+			print "name: %s, oprcode:%x" % (self._returnParaList[i]._name, self._returnParaList[i]._oprCode)
+	
 	def	_loadClose(self):
 		buf_Cls
 		

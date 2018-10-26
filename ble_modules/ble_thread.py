@@ -79,7 +79,7 @@ def thread_recv_data(mainArgObj):
 					#print "put queue"
 					mainArgObj._data_2_parser_queue_lock.acquire()
 					toParserQueue.put(toParserDataObj)
-					#"""
+					"""
 					testCount += 1
 					
 					if testCount % 5 == 0:
@@ -91,7 +91,7 @@ def thread_recv_data(mainArgObj):
 						helloParserDataObj._dataList = ['0x4', '0x3e', '0x1a', '0xd', '0x1', '0x22', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x9c', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0', '0x0']
 						toParserQueue.put(helloParserDataObj)
 						#print "send extend adv...."
-					#"""
+					"""
 					mainArgObj._data_2_parser_queue_lock.release()
 					offset += (curLen + 3)
 					continue

@@ -445,6 +445,11 @@ class Ble_eventParser:
 				returnObj = self._retParaList[i]
 				break
 		
+		
+		#print "returnObj:",returnObj
+		#print "returnObj.name:",returnObj._name
+		#print "returnObj.oprcode:%x"%returnObj._oprCode
+		
 		self._outArrayList.append(['Command_Opcode', "%#.4x --> %s --> OGF %#.2x OCF %#.3x" % (oprCode, returnObj._name, ogf, ocf)])
 		offset += 2
 		#5. return parameters

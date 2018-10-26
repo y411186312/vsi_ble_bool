@@ -19,6 +19,8 @@
 	{"HCI_LE_Set_Host_Channel_Classification",0x14,1,{{"Channel_Map",5,1}}},
 	{"HCI_LE_Read_Channel_Map",0x15,1,{{"Connection_Handle",2,1}}},
 	{"HCI_LE_Read_Remote_Used_Features",0x16,1,{{"Connection_Handle",2,1}}},
+	{"HCI_LE_Receiver_Test",0x1D,1,{{"RX_Frequency",1,1}}},
+	{"HCI_LE_Transmitter_Test",0x1E,3,{{"TX_Frequency",1,1},{"Length_Of_Test_Data",1,1},{"Packet_Payload",1,1}}},
 	{"HCI_LE_Test_End",0x1F,0},
         {"HCI_LE_Remote_Connection_Parameter_Request_Reply",0x20,7,{{"Connection_Handle",2,1},{"Conn_Interval_Min",2,1},{"Conn_Interval_Max",2,1},{"Conn_Latency",2,1},{"Supervision_Timeout",2,1},{"Minimum_CE_Length",2,1},{"Maximum_CE_Length",2,1}}},
         {"HCI_LE_Remote_Connection_Parameter_Request_Negative_Reply",0x21,2,{{"Connection_Handle",2,1},{"Reason",1,1}}},
