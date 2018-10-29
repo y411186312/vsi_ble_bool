@@ -1,4 +1,4 @@
-import wx
+import wx,time
 import wx.lib.scrolledpanel as scrolled 
 
 
@@ -123,6 +123,7 @@ class Ble_getInputClass(wx.Panel):
 			valueLayoutSizer.Add(valueTextObjArray[i], (i+1, 4), (1, 4), wx.EXPAND, border=2)
 			
 			#4.3 bind evt
+			#valueTextObjArray[i].Bind(wx.EVT_KEY_UP, lambda evt, argIndex=i:self.lower_to_upper(evt, argIndex))
 			valueTextObjArray[i].Bind(wx.EVT_TEXT, lambda evt, argIndex=i:self.OnEnter(evt, argIndex))
 			
 		main_vbox.Add(cmdName_hbox)	
@@ -130,8 +131,66 @@ class Ble_getInputClass(wx.Panel):
 		main_vbox.Add(valueLayoutSizer)
 		
 		#self.hbox.Add(valueLayoutSizer)
-		self._panel.SetSizerAndFit(main_vbox)		
+		self._panel.SetSizerAndFit(main_vbox)	
 		
+	def lower_to_upper(self, evt, index):
+		eventObj = evt.GetEventObject()
+		end_pos = eventObj.GetInsertionPoint()
+
+		if end_pos <=0 :
+			return
+			
+		start_pos = end_pos -1
+		eventObj.SetSelection(start_pos,end_pos)
+		char_value=eventObj.GetStringSelection()
+		
+		if 97<=ord(char_value)<=122:
+			upper_case = char_value.upper()
+			eventObj.Remove(start_pos,end_pos)
+			#time.sleep(.5)
+			eventObj.WriteText(upper_case)
+		else:
+			eventObj.SetInsertionPoint(end_pos)
+		#self._valueList[index] = content[0:curItemRealLen]
+		#self.countTextObjArray[index].SetLabel("[%#.3d/%#.3d]"%(curItemRealLen/2, curItemLen))
+		
+	def OnEnter(self,evt, index): 
+		eventObj = evt.GetEventObject()
+		content = eventObj.GetValue()
+		curItemLen = self.inputItemValLen[index]
+		curItemRealLen = len(content)
+		if self._clear == True:
+			self._clear = False
+			return 
+		end_pos = eventObj.GetInsertionPoint()
+		if curItemRealLen > curItemLen *2:
+			
+			content = content[0:end_pos-1].upper() + content[end_pos:curItemLen*2+1].upper()
+			self._clear == True
+			eventObj.Clear()
+			self._clear = True
+			eventObj.write(content)
+			end_pos -= 1
+			
+			
+		else:
+			try: 
+				a = int(content[end_pos-1], 16)	
+			except:
+				content = content[0:end_pos-1].upper() + content[end_pos:curItemRealLen].upper()
+				end_pos -= 1
+			
+			self._clear = True
+			eventObj.Clear()
+			self._clear = True
+			eventObj.write(content.upper())
+		curItemRealLen = len(content)
+		self._valueList[index] = content[0:curItemRealLen/2*2]
+			
+		eventObj.SetInsertionPoint(end_pos)
+		self.countTextObjArray[index].SetLabel("[%#.3d/%#.3d]"%(curItemRealLen/2, curItemLen))
+		
+	"""
 	def OnEnter(self,evt, index): 
 		eventObj = evt.GetEventObject()
 		content = eventObj.GetValue()
@@ -166,7 +225,7 @@ class Ble_getInputClass(wx.Panel):
 		if len(content) > 0:
 			self._valueList[index] = eventObj.GetValue()
 		print "value:", self._valueList
-	
+	"""
 	#def _getCmdName
 	def _getValue(self):
 		oprCodeStr = "%#.4x"% self.oprCode
@@ -189,10 +248,15 @@ class Ble_getInputClass(wx.Panel):
 					outList.append('%#.2x' % int(self._valueList[i][2*j:2*j+2], 16))
 			else:
 				for j in range(itemLen):
-					outList.append('%#.2x' % int(self._valueList[i][2*(itemLen-j-1):2*(itemLen - j-1)+2], 16))
+					try:
+						outList.append('%#.2x' % int(self._valueList[i][2*(itemLen-j-1):2*(itemLen - j-1)+2], 16))
+					except:
+						return []
 		
-		
-			
+		#print "len:",((len(outList) ) & 0xff)
+		#print "outList:",outList
+		#outList[3] = hex(0)
+		outList[3] = "%.2x" % ((len(outList) - 4) & 0xff)	
 			
 			
 		return outList

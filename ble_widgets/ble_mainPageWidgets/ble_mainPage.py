@@ -35,8 +35,8 @@ class Ble_CommandMainPage(wx.Panel):
 		self.cmdTreeObj = Ble_cmdTreeListCtrlClass(panel_up_left, -1, "no", windowSize, mainArgObj)
 		mainArgObj._cmdTreeObj = self.cmdTreeObj
 		#2. adv panel
-		listCtrlTitleList = ['BD Address', 'Conn. Handle', 'ADV Type', 'Addr Type', 'RSSI dBm', 'Role']
-		listCtrlWeightList = [3, 1, 1, 1, 1, 1]
+		listCtrlTitleList = ['BD Address', 'Conn. Handle', 'ADV Type', 'Addr Type', 'RSSI dBm', 'Role', 'extend adv']
+		listCtrlWeightList = [3, 1, 1, 1, 1, 1, 1]
 		
 		self.advDeviceFrame = Ble_AdvDevScanClass(panel_up_right_adv, windowSize, listCtrlTitleList, listCtrlWeightList, "library-system")
 		

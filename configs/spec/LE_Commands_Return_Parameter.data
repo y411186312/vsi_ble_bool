@@ -18,6 +18,8 @@
     {"HCI_LE_Set_Host_Channel_Classification",0x14,1,{{"Status",1,1}}},
     {"HCI_LE_Read_Channel_Map",0x15,3,{{"Status",1,1},{"Connection_Handle",2,1},{"LE_Channel_Map",5,1}}},
     {"HCI_LE_Read_Remote_Used_Features",0x16,0},
+    {"HCI_LE_Receiver_Test",0x1D,1,{{"Status",1,1}}},
+    {"HCI_LE_Transmitter_Test",0x1E,1,{{"Status",1,1}}},
     {"HCI_LE_Test_End",0x1F,2,{{"Status",1,1},{"Number_Of_Packets",2,1}}},
     {"HCI_LE_Remote_Connection_Parameter_Request_Reply",0x20,2,{{"Status",1,1},{"Connection_Handle",2,1}}},
     {"HCI_LE_Remote_Connection_Parameter_Request_Negative_Reply",0x21,2,{{"Status",1,1},{"Connection_Handle",2,1}}},

@@ -10,6 +10,28 @@ def get_time_stamp():
     time_stamp = "%s.%03d" % (data_head, data_secs)
     return time_stamp
 	
+def isAclHeader(dataList):
+	packetType = int(dataList[0], 16)
+	curPayLoadList = dataList[5:]
+	
+	if len(dataList) != 12 or packetType != 2:
+		return False
+	
+	matchCondtion = 0
+	shouldBeValue = int(curPayLoadList[0], 16)
+	for i in range(len(curPayLoadList)):
+		curValue = int(curPayLoadList[i], 16)
+		if curValue == shouldBeValue:
+			matchCondtion += 1
+		if shouldBeValue >= 0xff:
+			shouldBeValue = 0
+		else:
+			shouldBeValue += 1
+	if matchCondtion == 7:
+		return False
+	else:
+	
+		return True
 	
 #for recv data, divide packet
 #output: in-queue a event packet, just one packets 
@@ -34,7 +56,6 @@ def thread_recv_data(mainArgObj):
 		else:
 			recvDataList = remainDataList + recvDataList
 			remainDataList = []
-		
 		#check packet is insanity, get remainDataList
 		allLen = len(recvDataList)
 		offset = 0
@@ -43,6 +64,7 @@ def thread_recv_data(mainArgObj):
 			
 			toParserDataObj = comm_cls.HCI_QUEUE_DATA_LIST_CLASS()
 			toParserDataObj._time = get_time_stamp()
+			toParserDataObj._direction = 1
 			
 			if packetType == 0x04:
 				
@@ -60,7 +82,7 @@ def thread_recv_data(mainArgObj):
 					"""
 					testCount += 1
 					
-					if testCount % 10 == 0:
+					if testCount % 5 == 0:
 						helloParserDataObj = comm_cls.HCI_QUEUE_DATA_LIST_CLASS()
 						helloParserDataObj._time = get_time_stamp()
 						#helloParserDataObj._dataList = ['0x4','0x3e','0x13','0x1','0x0','0x1','0x0','0x0',\
@@ -77,6 +99,7 @@ def thread_recv_data(mainArgObj):
 					remainDataList = recvDataList[offset:]
 					break
 			elif packetType == 0x02:
+				#print "recvDataList:",recvDataList
 				try:
 					curLen = int(recvDataList[offset + 3], 16) & 0xff
 					curLen |= ((int(recvDataList[offset + 4], 16) &0xff) << 8)
@@ -85,9 +108,12 @@ def thread_recv_data(mainArgObj):
 					break
 				
 				if (offset + curLen + 5) <=  allLen:
-					toParserDataObj._dataList = recvDataList[offset:offset + curLen + 3]
+					toParserDataObj._dataList = recvDataList[offset:offset + curLen + 5]
+					#print "put......"
+					mainArgObj._data_2_parser_queue_lock.acquire()
 					toParserQueue.put(toParserDataObj)
-					
+					mainArgObj._data_2_parser_queue_lock.release()
+					offset += (curLen + 5)
 					continue
 				else:
 					remainDataList = recvDataList[offset:]
@@ -105,16 +131,22 @@ def thread_parse_data(mainArgObj):
 	name = sys._getframe().f_code.co_name
 	advMsgQueue = Queue.Queue()
 	nonAdvMsgQueue = Queue.Queue()
+	recvCalcAclObj =  comm_cls.HCI_ACL_THREAD_RUN_CLASS()
+	
+	
 	while ctlObj._needQuit != True:
 		hasNonAdvQueue = False
+		#"""
 		try:
 			dataRecvList = data_from_queue.get(block=True, timeout=2)
+			#print "subEvtCode::::", int(dataRecvList._dataList[3], 16)
 			if isinstance(dataRecvList, comm_cls.HCI_QUEUE_DATA_LIST_CLASS) == True:
 				packetType = int(dataRecvList._dataList[0], 16)
 				if packetType == 0x4:
 					eventCode = int(dataRecvList._dataList[1], 16)
 					subEvtCode = int(dataRecvList._dataList[3], 16)
-					if eventCode == 0x3e and subEvtCode == 0x02:
+					#print "subEvtCode:",subEvtCode
+					if eventCode == 0x3e and (subEvtCode == 0x02 or subEvtCode == 0xd): #adv or extend adv
 						advMsgQueue.put(dataRecvList)
 					else:
 						nonAdvMsgQueue.put(dataRecvList)
@@ -131,6 +163,7 @@ def thread_parse_data(mainArgObj):
 				continue
 			#else:
 			#	print "process adv event................."
+		"""
 		qsize = data_from_queue.qsize()
 		for i in range(qsize):
 			dataRecvList = data_from_queue.get()
@@ -139,7 +172,7 @@ def thread_parse_data(mainArgObj):
 				if packetType == 0x4:
 					eventCode = int(dataRecvList._dataList[1], 16)
 					subEvtCode = int(dataRecvList._dataList[3], 16)
-					if eventCode == 0x3e and subEvtCode == 0x02:
+					if eventCode == 0x3e and (subEvtCode == 0x02 or subEvtCode == 0xd):
 						advMsgQueue.put(dataRecvList)
 					else:
 						nonAdvMsgQueue.put(dataRecvList)
@@ -148,23 +181,19 @@ def thread_parse_data(mainArgObj):
 			else:
 				print "error to get data from uart recv thread...."
 				continue
-			
-		#print "thread_parse_data falg1"
+		"""
 		#2. process all non-adv
 		qsize = nonAdvMsgQueue.qsize()
 		for i in range(qsize):
-			#print "thread_parse_data falg1.2"
 			temMsgObj = nonAdvMsgQueue.get()
 			packetType = int(temMsgObj._dataList[0], 16)
 			eventCode = int(temMsgObj._dataList[1], 16)
-			
 			if mainArgObj._parserObj != None:
 				#2.1 add message log
 				messageLogList =  mainArgObj._parserObj.getMessageLog(temMsgObj._time, \
 				                                                      temMsgObj._direction, \
 																	  temMsgObj._dataList)
 				mainArgObj._messsageLogObj.addMessage_new(messageLogList)
-				
 				if packetType == 4 and mainArgObj._mainPageStatusFilter == False:
 					#add parser result to cmd status interface
 					statusParserList = mainArgObj._parserObj.getMessagePaserResult(temMsgObj._dataList)
@@ -172,52 +201,60 @@ def thread_parse_data(mainArgObj):
 					
 				#2.2 add cmd status to display
 				subEvtCode = int(dataRecvList._dataList[3], 16)
-				"""	
-				if packetType == 1:	###reset
-					oprCode = int(temMsgObj._dataList[1], 16) & 0xff
-					oprCode |= ((int(temMsgObj._dataList[2], 16) & 0xff) << 8)
-					if oprCode == 0x0c03:
-						advMsgQueue.queue.clear()
-						mainArgObj._advDeviceListObj.clearAllAdv()
-						mainArgObj._connectionList = []
-						mainArgObj._advDeviceBdaddrList = []
-					elif oprCode == 0x1009: #read_bd_addr
-						offset = 5
-						mainArgObj._bdAddrList = []
-						bdStr = ''
-						for i in range(6):
-							bdStr += "%.2x "%int(temMsgObj._dataList[offset + 6 -i -1], 16)
-							mainArgObj._bdAddrList.append(temMsgObj._dataList[offset + 6 -i -1])
-						print "mainArgObj:",mainArgObj._bdAddrList
-						mainArgObj._statusBarObj.setBdaddr(bdStr)
-				"""		
+					
 				if packetType == 4 and eventCode == 0xf: #connect status
 					statusArrayList = mainArgObj._parserObj.getMessagePaserResult(temMsgObj._dataList)
-					#print "statusArrayList:",statusArrayList
 					mainArgObj._displayStatusObj.addDetail(statusArrayList)
 				
 				elif packetType == 4 and eventCode == 0x5: #disconnect status
-					#print "enter disconnect...."
 					statusArrayList = mainArgObj._parserObj.getMessagePaserResult(temMsgObj._dataList)
-					#print "statusArrayList:",statusArrayList
 					mainArgObj._displayStatusObj.addDetail(statusArrayList)
 					connectHandle = int(temMsgObj._dataList[4], 16) & 0xff
 					connectHandle |= ((int(temMsgObj._dataList[5], 16) & 0xff )<< 8)
 					connectItem = None
 					for i in range(len(mainArgObj._connectionList)):
-						#print "_connectionList[%d].handle=%d" % (i, mainArgObj._connectionList[i]._connectHandle)
 						if connectHandle == mainArgObj._connectionList[i]._connectHandle:
-							#print "remove connect handle..."
 							connectItem = mainArgObj._connectionList[i]
 							mainArgObj._connectionList.remove(mainArgObj._connectionList[i])
 							break
 							
-					#mainArgObj._connectionList.append(connectItem)
 					if connectItem != None:
 						mainArgObj._advDeviceListObj.markAdvDevOff(connectItem._bdAddr, connectItem._connectHandle, connectItem._role)
+				elif packetType == 4 and eventCode == 0x13: #acl ack. Number_of_Complete_Packets
+					payloadLen = int(temMsgObj._dataList[2], 16) & 0xff
+					numOfHandle = int(temMsgObj._dataList[3], 16) & 0xff
+					handleOffset = 4
+					allCompleteNum = 0
+					numOfCompleteOffset = handleOffset + numOfHandle *2
+					numOfCompleteList = [0]*numOfHandle
+					handleList = [0]*numOfHandle
+					#foundExistHandleFlagList = [False] *numOfHandle
+					for i in range(numOfHandle):
+						handleList[i] = int(temMsgObj._dataList[handleOffset + i *2], 16) & 0xff
+						handleList[i] |= ((int(temMsgObj._dataList[handleOffset + i *2 + 1], 16) & 0xf) << 8)
 						
-				
-				elif packetType == 4 and eventCode == 0xe:
+						numOfCompleteList[i] = int(temMsgObj._dataList[numOfCompleteOffset + i *2], 16) & 0xff
+						numOfCompleteList[i] |= ((int(temMsgObj._dataList[numOfCompleteOffset + i *2 + 1], 16) & 0xf) << 8)
+						
+						
+					mainArgObj._parserToAclCommunicateObj._lock.acquire()
+					hasFoundConnectHandle = False
+					for i in range(numOfHandle):
+						#print "numOfCompleteList[%d]:%d" % (i, numOfCompleteList[i])
+						for j in range(len(mainArgObj._parserToAclCommunicateObj._connectHandlesList)):
+							if mainArgObj._parserToAclCommunicateObj._connectHandlesList[j] == handleList[i]:
+								mainArgObj._parserToAclCommunicateObj._connectHandlesCompleteLists[j] += numOfCompleteList[i]
+								hasFoundConnectHandle = True
+								break
+						if hasFoundConnectHandle == False:
+							mainArgObj._parserToAclCommunicateObj._connectHandlesList.append(handleList[i])
+							mainArgObj._parserToAclCommunicateObj._connectHandlesCompleteLists.append(numOfCompleteList[i])
+						mainArgObj._parserToAclCommunicateObj._ack = True
+						mainArgObj._parserToAclCommunicateObj._completeNum += numOfCompleteList[i]
+						
+					mainArgObj._parserToAclCommunicateObj._lock.release()
+						
+				elif packetType == 4 and eventCode == 0xe: #cmd status
 					
 					#special process
 					oprCode = int(temMsgObj._dataList[4], 16) & 0xff
@@ -228,11 +265,10 @@ def thread_parse_data(mainArgObj):
 						mainArgObj._connectionList = []
 						mainArgObj._advDeviceBdaddrList = []
 					elif oprCode == 0x2002: #read_le_buffer_size
-						mainArgObj._aclBufferSize = int(temMsgObj._dataList[7], 16) & 0xff
-						mainArgObj._aclBufferSize |= (int(temMsgObj._dataList[8], 16) & 0xff )<< 8 
-						mainArgObj._aclBufferCount = int(temMsgObj._dataList[9], 16) & 0xff
-						#print "mainArgObj._aclBufferSize:",mainArgObj._aclBufferSize
-						#print "mainArgObj._aclBufferNum:",mainArgObj._aclBufferNum
+						mainArgObj._parserToAclCommunicateObj._aclBufferSize
+						mainArgObj._parserToAclCommunicateObj._aclBufferSize = int(temMsgObj._dataList[7], 16) & 0xff
+						mainArgObj._parserToAclCommunicateObj._aclBufferSize |= (int(temMsgObj._dataList[8], 16) & 0xff )<< 8 
+						mainArgObj._parserToAclCommunicateObj._aclBufferCount = int(temMsgObj._dataList[9], 16) & 0xff
 						
 					elif oprCode == 0x1009: #read_bd_addr
 						status = int(temMsgObj._dataList[6], 16)
@@ -244,8 +280,6 @@ def thread_parse_data(mainArgObj):
 							for i in range(6):
 								bdStr += "%.2x "%int(temMsgObj._dataList[offset + 6 -i -1], 16)
 								mainArgObj._bdAddrList.append(temMsgObj._dataList[offset + 6 -i -1])
-							#print "mainArgObj:",mainArgObj._bdAddrList
-							#print "temMsgObj._dataList:",temMsgObj._dataList
 							mainArgObj._statusBarObj.setBdaddr(bdStr)
 						
 							mainArgObj._deviceInfoPageObj.addAttr2Dev('BdAddr', bdStr)
@@ -289,7 +323,6 @@ def thread_parse_data(mainArgObj):
 					statusArrayList = mainArgObj._parserObj.getMessagePaserResult(temMsgObj._dataList)
 					mainArgObj._displayStatusObj.addDetail(statusArrayList)
 					
-				#connect or enhanced connect	
 				elif packetType == 4 and eventCode == 0x3e and (subEvtCode == 0x1 or subEvtCode == 0x0a):
 					#print "get connect............"
 					#connect handle
@@ -301,7 +334,52 @@ def thread_parse_data(mainArgObj):
 								break	#remove the same handle object, may be update
 						mainArgObj._connectionList.append(connectItem)
 						mainArgObj._advDeviceListObj.markAdvDevOn(connectItem._bdAddr, connectItem._connectHandle, connectItem._role, connectItem._peerAddrType)
-						#print "add connect device"
+						
+				elif packetType == 2 and temMsgObj._direction == 1 and mainArgObj._aclDataTransferObj != None and mainArgObj._aclGuiHasBeenQuited == False: #recv acl
+					if isAclHeader(temMsgObj._dataList) == True: #first time, should set range
+						
+						payLoadList = temMsgObj._dataList[5:]
+						recvCalcAclObj._packetSize = ((int(payLoadList[1], 16) & 0xff) << 0)
+						recvCalcAclObj._packetSize |= ((int(payLoadList[2], 16) & 0xff) << 8)
+						
+						recvCalcAclObj._packetNum = ((int(payLoadList[3], 16) & 0xff) << 0)
+						recvCalcAclObj._packetNum |= ((int(payLoadList[4], 16) & 0xff) << 8)
+						recvCalcAclObj._packetNum |= ((int(payLoadList[5], 16) & 0xff) << 16)
+						recvCalcAclObj._packetNum |= ((int(payLoadList[6], 16) & 0xff) << 24)
+						
+						recvCalcAclObj._curRecvPacketCnt = 0
+						recvCalcAclObj._curRecvLen = 0
+						recvCalcAclObj._allDataLen = recvCalcAclObj._packetNum * recvCalcAclObj._packetSize
+						recvCalcAclObj._startTime =  time.clock()
+						recvCalcAclObj._curValueIsValued = True
+						mainArgObj._aclRecvHasGotAclHeader = True
+						mainArgObj._aclDataTransferObj.setRange(recvCalcAclObj._packetNum)
+					else:
+						if mainArgObj._aclRecvHasGotAclHeader == True:
+							recvCalcAclObj._curRecvPacketCnt += 1
+							
+							#set gauge
+							mainArgObj._aclDataTransferObj.setCurrentValue(recvCalcAclObj._curRecvPacketCnt)
+							#set rate
+							transferSize = recvCalcAclObj._packetSize * recvCalcAclObj._curRecvPacketCnt #byte
+							currentTime = time.clock()
+							rateStr = "%.2f" % (transferSize *8/float(currentTime - recvCalcAclObj._startTime))
+							mainArgObj._aclDataTransferObj.setTransferRateStr(rateStr)
+							mainArgObj._aclDataTransferObj.setTransferSize(transferSize)
+							if recvCalcAclObj._curRecvPacketCnt == recvCalcAclObj._packetNum:
+								recvCalcAclObj._curRecvPacketCnt = 0
+								recvCalcAclObj._curRecvLen = 0	
+								recvCalcAclObj._allDataLen = 0
+								recvCalcAclObj._packetNum = 0
+								recvCalcAclObj._packetSize = 0
+								recvCalcAclObj._curValueIsValued = False
+								mainArgObj._aclRecvHasGotAclHeader = False
+						else:
+							curLen = ((int(temMsgObj._dataList[3], 16) & 0xff )<< 0)
+							curLen |= ((int(temMsgObj._dataList[4], 16) & 0xff )<< 0)
+							recvCalcAclObj._allDataLen += curLen
+							mainArgObj._aclDataTransferObj.setSpecialAclRecv(recvCalcAclObj._allDataLen, time.clock())	
+							
 		#3.	process adv
 		advQueueSize = 0
 		if hasNonAdvQueue == False and advMsgQueue.qsize() > 0: #if no non-adv then process all adv event
@@ -309,11 +387,13 @@ def thread_parse_data(mainArgObj):
 			advQueueSize = advMsgQueue.qsize()
 		elif advMsgQueue.qsize() > 0:
 			advQueueSize = 1
-		#print "advQueueSize:",advQueueSize
+		
 		for i in range(advQueueSize):		
 			temMsgObj = advMsgQueue.get()
 			packetType = int(temMsgObj._dataList[0], 16)
 			eventCode = int(temMsgObj._dataList[1], 16)
+			subEventCode = int(temMsgObj._dataList[3], 16)
+			#print "subEventCode:",subEventCode
 			messageLogList =  mainArgObj._parserObj.getMessageLog(temMsgObj._time, \
 				                                                      temMsgObj._direction, \
 																	  temMsgObj._dataList)
@@ -324,8 +404,9 @@ def thread_parse_data(mainArgObj):
 				statusParserList = mainArgObj._parserObj.getMessagePaserResult(temMsgObj._dataList)
 				mainArgObj._displayStatusObj.addDetail(statusParserList)
 			
-			
+			#if subEventCode == 0x1:
 			advDevList = mainArgObj._parserObj.getAdvDeviceList(temMsgObj._dataList)
+			#elif subEventCode == 0x1:
 			if advDevList != None:
 				
 				hasBeenAdded = False

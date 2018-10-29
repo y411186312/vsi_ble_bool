@@ -1,6 +1,14 @@
 import wx,threading,time
 import includes.ble_common_class as comm_cls 
-		
+	
+def get_time_stamp():
+    ct = time.time()
+    local_time = time.localtime(ct)
+    data_head = time.strftime("%H:%M:%S", local_time)
+    data_secs = (ct - int(ct)) * 1000
+    time_stamp = "%s.%03d" % (data_head, data_secs)
+    return time_stamp
+	
 class Ble_processBarGuage(wx.Frame):
 	def __init__(self, parent, statusLen, maxRange):
 		self._range = maxRange
@@ -25,6 +33,7 @@ class Ble_processBarGuage(wx.Frame):
 		hbox_status.Add(self.gauge, 8)
 		hbox_status.AddStretchSpacer(1)
 		hbox_status.Add(self.transferProcessTextObj,1)
+		hbox_status.AddStretchSpacer(1)
 		
 		#######data transfer detail
 		self.transferRateTitleObj = wx.StaticText(panel, wx.ID_ANY, 'Transfer Rate:')
@@ -38,14 +47,23 @@ class Ble_processBarGuage(wx.Frame):
 		
 		hbox_detail.AddStretchSpacer(1)
 		hbox_detail.Add(self.transferSizeTitleObj, 1)
-		hbox_detail.Add(self.transferSizeObj, 1)
+		hbox_detail.Add(self.transferSizeObj)
 		
 		vbox.Add(hbox_status, 2, border=5)
 		vbox.AddStretchSpacer(1)
 		vbox.Add(hbox_detail, 2, border=5)
 		
 		panel.SetSizerAndFit(vbox)
+	def setTransferRateStr(self, valueStr):
+		self.transferRateObj.SetLabel(valueStr + ' bps')
 		
+	def setTransferSize(self, size):
+		self.transferSizeObj.SetLabel(str(size) + ' bytes')
+	
+	
+	def setRange(self, range):
+		self.gauge.SetRange(range)
+		self._range = range
 	
 	def setCurrentValue(self, value):
 		if value > self._range:
@@ -66,7 +84,7 @@ class Ble_aclTransferClass(wx.Dialog):
 		
 		self._sendAclThreadObj = None
 		self.treadCloseFlag = False
-		
+		self._aclSpecialStartTime = 0
 		self._mainArgObj = mainArgObj
 		#0. get handle data
 		handleList = []
@@ -102,6 +120,8 @@ class Ble_aclTransferClass(wx.Dialog):
 		
 		connHandle_staticText = wx.StaticText(panel_input, wx.ID_ANY, 'Connection Handle', (80, 30))
 		self.connHandle_combox = wx.ComboBox(panel_input, size =(120, 30), style=wx.CB_DROPDOWN | wx.CB_SORT, choices=connectHandleList)
+		if len(connectHandleList)>0:
+			self.connHandle_combox.SetSelection(0)
 		
 		bcFlag_staticText = wx.StaticText(panel_input, wx.ID_ANY, 'Broadcast Flag', (80, 30))
 		self.bcFlag_choice = wx.Choice(panel_input, size=(120, 30), choices = broadcastFlagList)
@@ -139,7 +159,7 @@ class Ble_aclTransferClass(wx.Dialog):
 		
 		#3. data transfer
 		#windowSize
-		self.dataTransferObj = Ble_processBarGuage(panel_transStatus,windowSize[1] -15, 300)
+		self.dataTransferStatusObj = Ble_processBarGuage(panel_transStatus,windowSize[1] -15, 300)
 		
 		#4. button
 		self._startTxButton = wx.Button(panel_button, label = 'Start Transfer', size = (100, 30))
@@ -170,32 +190,56 @@ class Ble_aclTransferClass(wx.Dialog):
 		
 		mainPanel.SetSize((400, 600))
 		mainPanel.SetSizerAndFit(main_vbox)
+	
+	def setRange(self, range):
+		self.dataTransferStatusObj.setRange(range)
+		self._aclSpecialStartTime = 0
+	def setTransferRateStr(self, rateStr):
+		self.dataTransferStatusObj.setTransferRateStr(rateStr)
+	def setTransferSize(self, transferSize):
+		self.dataTransferStatusObj.setTransferSize(transferSize)
+	
+	def setCurrentValue(self, packetCnt):
+		#print "setCurrentValue::::"
+		self.dataTransferStatusObj.setCurrentValue(packetCnt)
 		
+		
+	def setSpecialAclRecv(self, transferSize, timeData):
+		if self._aclSpecialStartTime == 0:
+			self._aclSpecialStartTime = timeData
+			return
+			
+		timeInterval = timeData - self._aclSpecialStartTime
+		rateStr = "%.2f" % (transferSize * 8 /float(timeData - self._aclSpecialStartTime))
+		self.setTransferRateStr(rateStr)
+		self.setTransferSize(transferSize)
+		
+			
 	def cancelTransfer(self, evt):
+		self._mainArgObj._aclRecvHasGotAclHeader = False
 		self.treadCloseFlag = True
 		self.restoreBeforeSendStatus()
 		
 	def closeGui(self, evt):
+		self._mainArgObj._aclGuiHasBeenQuited = True
+		self._mainArgObj._aclRecvHasGotAclHeader = False
 		self.treadCloseFlag = True
 		if self._sendAclThreadObj != None:
 			self._sendAclThreadObj.join()
 		self.Close()
 		
 	def setTxMode(self):
-		print "setTxMode"
 		self._startTxButton.Enable()
 		self._cancelTxButton.Disable()
 		self._closeButton.Enable()
 		
 	
 	def setRxMode(self):
-		print "setRxMode"
 		self._startTxButton.Disable()
 		self._cancelTxButton.Disable()
 		self._closeButton.Enable()
 	
 	def displayErrorDlg(self, typeStr, shouldStr):
-		print "displayErrorDlg"
 		dlg = wx.MessageDialog(None, "[%s] should be [%s], Yes for input again"%(typeStr, shouldStr), "Error input", wx.YES_NO | wx.ICON_QUESTION)
 		if dlg.ShowModal() == wx.ID_NO:
 			self.Close(True)
@@ -221,11 +265,11 @@ class Ble_aclTransferClass(wx.Dialog):
 		content = self.packetSize_text.GetLineText(0)
 		try:
 			threadRunObj._packetSize = packetSize = int(content)
-			if threadRunObj._packetSize <= 0 or threadRunObj._packetSize > 27:
-				self.displayErrorDlg('Packet Size', 'dex digital (0, 27]')
+			if threadRunObj._packetSize <= 0 or threadRunObj._packetSize > 251:
+				self.displayErrorDlg('Packet Size', 'dex digital (0, 251]')
 				return None
 		except:
-			self.displayErrorDlg('Packet Size', 'dex digital (0, 27]')
+			self.displayErrorDlg('Packet Size', 'dex digital (0, 251]')
 			return None
 			
 		#4. packet cnt
@@ -342,17 +386,53 @@ class Ble_aclTransferClass(wx.Dialog):
 		
 	def thread_acl_send(self, aclSendArgObj):
 		hasBeenSendPacketCnt = 0
-		
-		curCouldSendCnt = self._mainArgObj._aclBufferCount
+		#self._mainArgObj._parserToAclCommunicateObj = self._mainArgObj._parserToAclCommunicateObj
 		uartObj = self._mainArgObj._uartApiObj
+		#print "self._mainArgObj._parserToAclCommunicateObj._aclBufferCount:",self._mainArgObj._parserToAclCommunicateObj._aclBufferCount
+		curCouldSendCnt = self._mainArgObj._parserToAclCommunicateObj._aclBufferCount
+	
+		if curCouldSendCnt > aclSendArgObj._packetNum:
+			curCouldSendCnt = aclSendArgObj._packetNum
 		
-		parser2AclCommObj = self._mainArgObj._parserToAclCommunicateObj
-		if parser2AclCommObj < aclSendArgObj._packetNum:
-			parser2AclCommObj = aclSendArgObj._packetNum
-			
+		#do some clean work
+		hasFoundHandle = False
+		self._mainArgObj._parserToAclCommunicateObj._lock.acquire()
+		for i in range(len(self._mainArgObj._parserToAclCommunicateObj._connectHandlesList)):
+			if aclSendArgObj._connectHandle == self._mainArgObj._parserToAclCommunicateObj._connectHandlesList[i]:
+				self._mainArgObj._parserToAclCommunicateObj._connectHandlesCompleteLists[i] = 0
+				break
+		self._mainArgObj._parserToAclCommunicateObj._completeNum = 0	
+		self._mainArgObj._parserToAclCommunicateObj._lock.release()
+		
+		#send first packet include size and other infos
+		curCouldSendCnt -=1
+		tempDataObj = comm_cls.HCI_QUEUE_DATA_LIST_CLASS()
+		tempDataObj._time = get_time_stamp()
+		tempDataObj._dataList = aclSendArgObj._firstPacketList
+		self._mainArgObj._data_2_parser_queue_lock.acquire()
+		self._mainArgObj._recv_2_parser_queue.put(tempDataObj)
+		self._mainArgObj._data_2_parser_queue_lock.release()
+		
+		uartObj.uartSend(tempDataObj._dataList)
+		
+		
+		#do setting
+		self.setRange(aclSendArgObj._packetNum)
 		dataValue = 0
+		transferSize = 0
+		startTime = time.clock()
+		#print "curCouldSendCnt:",curCouldSendCnt
 		while hasBeenSendPacketCnt < aclSendArgObj._packetNum and self.treadCloseFlag == False:
 			#1. send data
+			#print "send....."
+			
+			self._mainArgObj._parserToAclCommunicateObj._lock.acquire()
+			self._mainArgObj._parserToAclCommunicateObj._ack = False
+			self._mainArgObj._parserToAclCommunicateObj._lock.release()
+			if curCouldSendCnt > aclSendArgObj._packetNum - hasBeenSendPacketCnt:
+				curCouldSendCnt = aclSendArgObj._packetNum - hasBeenSendPacketCnt
+			#print "curCouldSendCnt:",curCouldSendCnt
+			
 			for i in range(curCouldSendCnt):
 				#1.1 fill data
 				curPayloadList = []
@@ -362,19 +442,37 @@ class Ble_aclTransferClass(wx.Dialog):
 					curPayloadList.append(hex(dataValue))
 					dataValue += 1
 				#1.2 uart send data
-				uartObj.uartSend(aclSendArgObj._headerStrList + curPayloadList)
+				tempDataObj = comm_cls.HCI_QUEUE_DATA_LIST_CLASS()
+				tempDataObj._time = get_time_stamp()
+				tempDataObj._dataList = aclSendArgObj._headerStrList + curPayloadList
+				self._mainArgObj._data_2_parser_queue_lock.acquire()
+				self._mainArgObj._recv_2_parser_queue.put(tempDataObj)
+				self._mainArgObj._data_2_parser_queue_lock.release()
+				
+				uartObj.uartSend(tempDataObj._dataList)
 				hasBeenSendPacketCnt += 1
+				transferSize += aclSendArgObj._packetSize
+			curCouldSendCnt = 0
+			#set gauge
+			self.setCurrentValue(hasBeenSendPacketCnt)
+			#set rate
+			currentTime = time.clock()
+			rateStr = "%.2f" % (transferSize * 8 /float(currentTime - startTime))
+			self.setTransferRateStr(rateStr)
+			self.setTransferSize(transferSize)
+			
 			#2. wait ack and update curCouldSendCnt
 			while self.treadCloseFlag == False:
-				parser2AclCommObj._lock.acquire()
-				if parser2AclCommObj._ack == True:
-					curCouldSendCnt = parser2AclCommObj._numOfCompletePackets
-					parser2AclCommObj._numOfCompletePackets = 0
-					parser2AclCommObj._lock.release()
+				self._mainArgObj._parserToAclCommunicateObj._lock.acquire()
+				if self._mainArgObj._parserToAclCommunicateObj._ack == True:
+					curCouldSendCnt = self._mainArgObj._parserToAclCommunicateObj._completeNum
+					self._mainArgObj._parserToAclCommunicateObj._completeNum = 0	
+					self._mainArgObj._parserToAclCommunicateObj._lock.release()
 					break
-				parser2AclCommObj._lock.release()
-
+				self._mainArgObj._parserToAclCommunicateObj._lock.release()
+			
 		print "thread_acl_send quit"
+		self.restoreBeforeSendStatus()
 		pass
 		
 	def thread_acl_recv(self):
