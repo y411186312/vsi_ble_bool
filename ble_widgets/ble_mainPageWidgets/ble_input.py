@@ -123,7 +123,7 @@ class Ble_getInputClass(wx.Panel):
 			valueLayoutSizer.Add(valueTextObjArray[i], (i+1, 4), (1, 4), wx.EXPAND, border=2)
 			
 			#4.3 bind evt
-			valueTextObjArray[i].Bind(wx.EVT_KEY_UP, lambda evt, argIndex=i:self.lower_to_upper(evt, argIndex))
+			#valueTextObjArray[i].Bind(wx.EVT_KEY_UP, lambda evt, argIndex=i:self.lower_to_upper(evt, argIndex))
 			valueTextObjArray[i].Bind(wx.EVT_TEXT, lambda evt, argIndex=i:self.OnEnter(evt, argIndex))
 			
 		main_vbox.Add(cmdName_hbox)	
@@ -159,15 +159,37 @@ class Ble_getInputClass(wx.Panel):
 		content = eventObj.GetValue()
 		curItemLen = self.inputItemValLen[index]
 		curItemRealLen = len(content)
-
+		if self._clear == True:
+			self._clear = False
+			return 
+		end_pos = eventObj.GetInsertionPoint()
 		if curItemRealLen > curItemLen *2:
-			self._valueList[index] = content[0:curItemLen*2]
+			
+			content = content[0:end_pos-1].upper() + content[end_pos:curItemLen*2+1].upper()
+			self._clear == True
+			eventObj.Clear()
+			self._clear = True
+			eventObj.write(content)
+			end_pos -= 1
+			
+			
 		else:
-			self._valueList[index] = content[0:curItemRealLen/2*2]
+			try: 
+				a = int(content[end_pos-1], 16)	
+			except:
+				content = content[0:end_pos-1].upper() + content[end_pos:curItemRealLen].upper()
+				end_pos -= 1
 			
+			self._clear = True
+			eventObj.Clear()
+			self._clear = True
+			eventObj.write(content.upper())
+		curItemRealLen = len(content)
+		self._valueList[index] = content[0:curItemRealLen/2*2]
+			
+		eventObj.SetInsertionPoint(end_pos)
 		self.countTextObjArray[index].SetLabel("[%#.3d/%#.3d]"%(curItemRealLen/2, curItemLen))
-			
-	
+		
 	"""
 	def OnEnter(self,evt, index): 
 		eventObj = evt.GetEventObject()
