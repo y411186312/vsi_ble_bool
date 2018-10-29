@@ -35,8 +35,8 @@ class Ble_CommandMainPage(wx.Panel):
 		self.cmdTreeObj = Ble_cmdTreeListCtrlClass(panel_up_left, -1, "no", windowSize, mainArgObj)
 		mainArgObj._cmdTreeObj = self.cmdTreeObj
 		#2. adv panel
-		listCtrlTitleList = ['BD Address', 'Conn. Handle', 'ADV Type', 'Addr Type', 'RSSI dBm', 'Role']
-		listCtrlWeightList = [3, 1, 1, 1, 1, 1]
+		listCtrlTitleList = ['BD Address', 'Conn. Handle', 'ADV Type', 'Addr Type', 'RSSI dBm', 'Role', 'extend adv']
+		listCtrlWeightList = [3, 1, 1, 1, 1, 1, 1]
 		
 		self.advDeviceFrame = Ble_AdvDevScanClass(panel_up_right_adv, windowSize, listCtrlTitleList, listCtrlWeightList, "library-system")
 		
@@ -55,10 +55,10 @@ class Ble_CommandMainPage(wx.Panel):
 			minX = windowSize[0] * 2 / 3
 			#panel = wx.ScrolledWindow(mainPanel)
 			#panel.SetScrollbars(1, 1, 100, 10)
-			panel = scrolled.ScrolledPanel(self.mainPanel, -1, size=(780, 400), style = wx.TAB_TRAVERSAL|wx.SUNKEN_BORDER)
+			panel = scrolled.ScrolledPanel(self.mainPanel, -1, size=(780, 350), style = wx.TAB_TRAVERSAL|wx.SUNKEN_BORDER)
 			panel.SetName(cmdArgList[i]._name)
-			panel.SetVirtualSize((780, 400))
-			panel.SetMaxSize((780, 280))
+			panel.SetVirtualSize((780, 350))
+			panel.SetMaxSize((780, 250))
 			panel.SetupScrolling(1)
 			guiInputObj = Ble_getInputClass(panel, cmdArgList[i])
 			self.scroll_input_obj_list.append(guiInputObj)
@@ -82,11 +82,11 @@ class Ble_CommandMainPage(wx.Panel):
 		#6. layout
 		
 		
-		layoutSizer = wx.GridBagSizer(3, 3)
+		layoutSizer = wx.GridBagSizer(4, 3)
 		layoutSizer.Add(panel_up_left, (0, 0), (2, 2), wx.EXPAND | wx.ALL)
 		layoutSizer.Add(panel_up_right_adv , (0, 2), (1, 1), wx.EXPAND | wx.ALL)
 		layoutSizer.Add(varHbox , (1, 2), (1, 1), wx.EXPAND | wx.ALL)
-		layoutSizer.Add(panel_down_cmd_status, (2, 0), (1, 3), wx.EXPAND|wx.ALL)
+		layoutSizer.Add(panel_down_cmd_status, (2, 0), (2, 3), wx.EXPAND|wx.ALL)
 		
 		
 		layoutSizer.AddGrowableCol(1, 0)

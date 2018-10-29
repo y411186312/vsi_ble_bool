@@ -2,3 +2,5 @@
 .gitignore
 /test
 /test_repo
+/dist
+/build

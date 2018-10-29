@@ -233,6 +233,14 @@ class Ble_LoadCmdClass:
 	def _getReturnParaList(self):
 		return self._returnParaList
 	
+	def _printCmdParaList(self):
+		for i in range(len(self._cmdsList)):
+			print "name: %s, oprcode:%x" % (self._cmdsList[i]._name, self._cmdsList[i]._oprCode)
+	
+	def _printReturnParaList(self):
+		for i in range(len(self._returnParaList)):
+			print "name: %s, oprcode:%x" % (self._returnParaList[i]._name, self._returnParaList[i]._oprCode)
+	
 	def	_loadClose(self):
 		buf_Cls
 		
@@ -286,10 +294,10 @@ class Ble_LoadCmdClass:
 						if self._subEventJsonObj != None:
 							#print "para._name:",para._name
 							#print "self._subEventJsonObj[para._name]:",self._subEventJsonObj[para._name]
-							#print "::::::::::",self._subEventJsonObj.get(para._name)
+							#print "::::::::::",para._name
 							if self._subEventJsonObj.get(para._name) != None:
 								para._subEventCode = int(self._subEventJsonObj[para._name], 16)
-								#print "get subevent code...."
+								#print "get subevent code [%s]....:%d"%(para._name, para._subEventCode)
 						self._eventsList.append(para)
 					else:
 						para._isCmd = True

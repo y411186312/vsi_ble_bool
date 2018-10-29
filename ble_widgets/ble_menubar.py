@@ -1,4 +1,5 @@
 import sys,wx,os
+from ble_widgets.ble_aclTransfer.ble_aclTransfer import *
 
 VERSION='0.1.1'
 COPYRIGHT='2018-2020'
@@ -66,7 +67,8 @@ ACTION_CLEAR_MESSAGE_LOG_ID=111
 ACTION_PORT_INIT_ID=112
 
 class Ble_MenuBar(wx.Frame):
-	def __init__(self, mainArgObj):
+	def __init__(self, winSize, mainArgObj):
+		self._windowSize = winSize
 		self._mainArgObj = mainArgObj
 		self._menuBar = wx.MenuBar()
 		self._fileMenu = wx.Menu()
@@ -98,12 +100,42 @@ class Ble_MenuBar(wx.Frame):
 		self._menuBar.Append(self._helpMenu,"&Help")
 		
 		self._helpMenu.Bind(wx.EVT_MENU, self.OnAboutDisplay)
+		self._toolsMenu.Bind(wx.EVT_MENU, self.OnAclTrasfer)
 		self._actionsMenu.Bind(wx.EVT_MENU, self.OnAboutDisplay)
 		
 	def OnQuit(self,e):
 	
 		print "exit"
 		sys.exit()
+		
+	def OnAclTrasfer(self, evt):
+	
+		id = evt.GetId()
+		#print "id:",id
+		isSend = True
+		if id == 120:
+			#print "Tx"
+			isSend = True
+		elif id == 121:
+			isSend = False
+			print "Rx"
+		else:
+			return
+		#print "isSend:",isSend
+		aclTransferObj = None
+		if isSend == True:
+			aclTransferObj = Ble_aclTransferClass(None, "Send Data", self._windowSize, self._mainArgObj)
+			aclTransferObj.setTxMode()
+		else:
+			aclTransferObj = Ble_aclTransferClass(None, "Receive Data", self._windowSize, self._mainArgObj)
+			aclTransferObj.setRxMode()
+		self._mainArgObj._aclDataTransferObj = aclTransferObj
+		self._mainArgObj._aclGuiHasBeenQuited = False
+		#aclTransferObj.Show()
+		if aclTransferObj.ShowModal() == wx.ID_YES:
+			self.Close(True)
+		aclTransferObj.Destroy()
+		self._mainArgObj._aclGuiHasBeenQuited =True
 	def OnAboutDisplay(self, evt):
 		evtObj = evt.GetEventObject()
 		id = evt.GetId()

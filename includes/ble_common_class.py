@@ -1,4 +1,4 @@
-
+import threading
 
 ACK_RECV_DATA_FLAG=0
 ACK_RECV_ACK_FLAG=1
@@ -25,7 +25,7 @@ class HCI_SPEC_CLASS(object):
 class HCI_QUEUE_DATA_LIST_CLASS(object):
 	def __init__(self):
 		self._time = ''
-		self._direction = 0
+		self._direction = 0 #0 send 1 for recv
 		self._dataList = []
 class HCI_THREAD_CTL_CLASS(object):
 	def __init__(self):
@@ -53,11 +53,56 @@ class HCI_CONNECT_EVENT_CLASS(object):	# if get LE_Connection_Complete event wil
 		self._bdAddr = []		#6B 
 		self._localRpa = []		#6B for enhanced connection
 		self._peerRpa = []		#6B for enhanced connection
-		self._connInterval = 0	#2B integer
-		self._connLatency = 0	#2B integer
-		self._timeout = 0		#2B integer
-		self._masterClkAccuracy = 0 #1B
+		self._connInterval = 0x0000	#2B integer
+		self._connLatency = 0x0000	#2B integer
+		self._timeout = 0x0000		#2B integer
+		self._masterClkAccuracy = 0x00 #1B
 
+
+class HCI_EXTEND_ADV_DEV_CLASS(object):		
+	def __init__(self):
+		self._subEventCode = 0x00
+		self._numReports = 0x00
+		self._eventType = 0x0000
+		self._addrType = 0x00
+		self._addr = [] #6b
+		self._primaryPhy = 0x00
+		self._secondaryPhy = 0x00
+		self._advSid = 0x00
+		self._txPower = 0x00
+		self._rssi = 0x00
+		self._periodicAdvInterval = 0x0000
+		self._directAddrType = 0x00
+		self._directAddr = [] #6b
+		self._dataLen = 0x00
+		self._data = []	#max 16b
+		
+class HCI_ACL_THREAD_RUN_CLASS(object):
+	def __init__(self):
+		self._packetSize = 0
+		self._packetNum = 0
+		self._connectHandle = 0
+		self._curValueIsValued = False
+		self._startTime = 0 #for recv
+		self._curRecvPacketCnt = 0 # for recv
+		self._allDataLen = 0	#for recv
+		self._headerStrList = [] # for send
+		self._firstPacketList = []
+		self._pbFlag = 0		#for send
+		self._bcFlag = 0		#for send
+		
+		
+class HCI_PARSER_2_ACL_COMMUNICATE_CLASS(object):
+	def __init__(self):
+		self._ack = False	#send to set False, parser to set TRUE
+		self._lock = threading.Lock()
+		self._time = 0			#for recv
+		self._aclBufferCount = 0
+		self._aclBufferSize = 0
+		self._completeNum = 0
+		self._connectHandlesCompleteLists = []	#for send, could calc all complete packets in cur handle
+		self._connectHandlesList = []
+		
 		
 """	
 class HCI_EVENT_CLASS(object):

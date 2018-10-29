@@ -18,7 +18,7 @@ class Ble_cmdReturnInfoClass(wx.Panel):
 		self._up_filterCheckBox = wx.CheckBox(self._panel, label = 'Event Panel Filter')
 		self._up_searchHistoryCombox = wx.ComboBox(self._panel, style=wx.CB_DROPDOWN | wx.CB_SORT, choices=[])
 		self._up_sendCmdButton = wx.Button(self._panel, label = 'Send Command', size=(100, 26))
-		self._down_displayInfoListCtrl = wx.ListCtrl(parent, -1, size=(windowSize[0]-20, 200), style = wx.LC_REPORT | wx.LC_NO_HEADER | wx.LC_AUTOARRANGE)
+		self._down_displayInfoListCtrl = wx.ListCtrl(parent, -1, size=(windowSize[0]-20, 150), style = wx.LC_REPORT | wx.LC_NO_HEADER | wx.LC_AUTOARRANGE)
 		
 		self._up_filterCheckBox.SetValue(mainArgObj._mainPageStatusFilter)
 		

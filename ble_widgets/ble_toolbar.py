@@ -374,6 +374,7 @@ class Ble_portlInitDialog(wx.Dialog):
 					#print "send cmd...."
 					self.sendCmdByDefaultValue('hci_read_bd_addr')
 					self.sendCmdByDefaultValue('hci_read_local_version_information')
+					self.sendCmdByDefaultValue('hci_le_read_buffer_size')
 					
 					self.Close()
 					

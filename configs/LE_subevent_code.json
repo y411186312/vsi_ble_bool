@@ -1,14 +1,16 @@
 {
 	"le_connection_complete": "0x01",
 	"le_advertising_report":"0x02",
-	"le_Connection_Update_Complete":"0x03",
-	"le_Read_Remote_Used_Features_Complete":"0x04",
-	"le_Long_Term_Key_Request":"0x05",
-	"remote_Connection_Parameter_Request_Event":"0x06",
-	"LE_Data_Length_Change_Event":"0x07",
-	"LE_Read_Local_P256_Public_Key_Complete_Event":"0x08",
-	"LE_Generate_DHKey_Complete_Event":"0x09",
-	"LE_Enhanced_Connection_Complete":"0x0a",
-	"LE_Directed_Adv_Report":"0x0b",
-	"LE_PHY_Update_Complete":"0x0c"
+	"le_connection_update_complete":"0x03",
+	"le_read_remote_used_features_complete":"0x04",
+	"le_long_term_key_request":"0x05",
+	"remote_connection_parameter_request_event":"0x06",
+	"le_data_length_change_event":"0x07",
+	"le_read_local_p256_public_key_complete_event":"0x08",
+	"le_generate_dhkey_complete_event":"0x09",
+	"le_enhanced_connection_complete":"0x0a",
+	"le_directed_ddv_report":"0x0b",
+	"le_phy_update_complete":"0x0c",
+	"le_extended_adv_report":"0x0d"
+
 }

@@ -42,7 +42,7 @@ def base_init(mainArgObj):
 	
 	mainArgObj._uartRecvThreadObj.start()
 	mainArgObj._parserThreadObj.start()
-	
+	#mainArgObj._loadSpecObj._printCmdParaList()
 	
 def main(argv):
 	#global timer

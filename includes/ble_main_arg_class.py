@@ -28,6 +28,7 @@ class MAIN_ARGS_CLASS(object):
 		self._loadSpecObj = load_cls.Ble_LoadCmdClass(specFolder, bleSubEvtJsonFPath, cmdDefvalueFilePath)
 		self._connectionList = []	#HCI_CONNECT_EVENT_CLASS obj list
 		self._advDeviceList = []	#HCI_ADV_DEVICE_CLASS obj list
+		self._extendAdvDeviceList = []	#HCI_EXTEND_ADV_DEV_CLASS obj list
 		self._bdAddrList = []
 		self._portIsConnect = False
 		#self._parser2AclQueue = Queue.Queue()	#send start time
@@ -42,3 +43,11 @@ class MAIN_ARGS_CLASS(object):
 		self._advDeviceListObj = None
 		self._messsageLogObj = None
 		self._displayStatusObj = None
+		
+		#acl
+		self._aclGuiHasBeenQuited = True
+		self._aclRecvHasGotAclHeader = False
+		self._aclDataTransferObj = None
+		self._aclBufferSize = 0
+		self._aclBufferCount = 0
+		self._parserToAclCommunicateObj = comm_cls.HCI_PARSER_2_ACL_COMMUNICATE_CLASS()

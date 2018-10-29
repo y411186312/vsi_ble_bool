@@ -64,10 +64,11 @@ class Ble_eventParser:
 			dirStr = '[RX] <---'
 			
 		elif type == 2:
+			#print "direction:",direction
 			typeStr = 'ACL'
 			dirStr = '[TX] --->'
 			if direction == 1:
-				dirStr = '[RX] --->'
+				dirStr = '[RX] <---'
 		else:
 			typeStr = 'Unknown Type'
 			dirStr = '<--->'
@@ -155,13 +156,15 @@ class Ble_eventParser:
 		eventCode = int(self._headerList[1], 16)
 		subEvtCode = int(self._payloadList[0], 16)
 		#print "subEvtCode:",subEvtCode
-		for i in range(len(self._evtList)):		
+		for i in range(len(self._evtList)):	
+			#print "i:",i
 			if eventCode == self._evtList[i]._eventCode:
 				if eventCode == 0x3e:
 					if subEvtCode != self._evtList[i]._subEventCode:
 						continue
 				
 				self._curEvent = self._evtList[i]
+				#print "self._curEvent.name:",self._curEvent._name
 				self._outArrayList.append(['Event', "%#.2x --> %s" %(eventCode, self._evtList[i]._name)])
 				break
 		
@@ -178,7 +181,33 @@ class Ble_eventParser:
 			if subEvtCode == 2:
 				self.parser_adv_event(subEvtCode)
 			elif subEvtCode == 0x1 or subEvtCode == 0xa:
-				self.parser_connect_event(self._headerList + self._payloadList)
+				self.parser_connect_event(subEvtCode)
+			elif subEvtCode == 0xd:
+				self.parser_extend_adv_event(subEvtCode)
+		elif eventCode == 0x13:
+			self.parser_num_complete_packet_evnet()
+			
+	def parser_num_complete_packet_evnet(self):
+		#1. len
+		totalLen = int(self._headerList[2], 16)
+		self._outArrayList.append(['Parameter Total Length', "%#.2x"%totalLen])
+		
+		offset = 0
+		self._curEvent
+		varityLen = 0
+		for i in range(len(self._curEvent._paraNameLists)):
+			curValueStr = ''
+			curLen = self._curEvent._paraSizeLists[i]
+			if curLen == 1:
+				varityLen = int(self._payloadList[offset], 16)
+			if self._curEvent._paraFixLenFlagLists[i] == 0:
+				curLen = varityLen
+			for j in range(curLen):
+				curValueStr += "%s " % hex(int(self._payloadList[offset + curLen - 1 - j], 16))
+			self._outArrayList.append(['%s' % self._curEvent._paraNameLists[i], "%s"%curValueStr])
+			offset += curLen
+		#
+		#returnObj = None
 		
 	def parser_connect_status_event(self):
 		#1. len
@@ -245,8 +274,9 @@ class Ble_eventParser:
 			
 		
 			
-	def parser_connect_event(self, dataList):
+	def parser_connect_event(self, subEvtCode):
 		#print "connect..."
+		dataList = self._headerList + self._payloadList
 		offset = 3
 		subEvtCode = int(dataList[offset], 16)
 		try:
@@ -328,8 +358,30 @@ class Ble_eventParser:
 				break	#remove the same handle object, may be update
 		self._connectionList.append(connnect)
 		"""
+	def parser_extend_adv_event(self, subEvtCode):
+		#1. len
+		#print "Enter extend adv..."
+		totalLen = int(self._headerList[2], 16)
+		self._outArrayList.append(['Parameter Total Length', "%#.2x"%totalLen])
+		offset = 0
+		#2. sub
+		realLen = 0
+		for i in range(len(self._curEvent._paraSizeLists)):
+			curItemSize = self._curEvent._paraSizeLists[i]
+			if self._curEvent._paraSizeLists[i] == 1:
+				realLen = int(self._payloadList[offset], 16)	#for variety len item
+			if self._curEvent._paraFixLenFlagLists[i] == 0:
+				curItemSize = realLen
+			valueStr = ''
+			for j in range(curItemSize):
+				valueStr += "%#.2x "% int(self._payloadList[offset+curItemSize-j-1], 16)
+				
+			self._outArrayList.append([self._curEvent._paraNameLists[i], "%s"%valueStr])
+			offset += curItemSize
+			
 		
 	def parser_adv_event(self, subEvtCode):
+		#print "adv....."
 		#1. len
 		totalLen = int(self._headerList[2], 16)
 		self._outArrayList.append(['Parameter Total Length', "%#.2x"%totalLen])
@@ -393,6 +445,11 @@ class Ble_eventParser:
 				returnObj = self._retParaList[i]
 				break
 		
+		
+		#print "returnObj:",returnObj
+		#print "returnObj.name:",returnObj._name
+		#print "returnObj.oprcode:%x"%returnObj._oprCode
+		
 		self._outArrayList.append(['Command_Opcode', "%#.4x --> %s --> OGF %#.2x OCF %#.3x" % (oprCode, returnObj._name, ogf, ocf)])
 		offset += 2
 		#5. return parameters
@@ -415,16 +472,27 @@ class Ble_eventParser:
 				offset += curItemSize
 		else:
 			self._outArrayList.append(['Status', "%#.2x --> Unknown Command"%status])
-	def getAdvDeviceList(self, dataList):
+	def getAdvDeviceList(self, dataList): #adv or extend adv
 		#self._evtList = eventList
+		subEventCode = int(dataList[3], 16)
+		
+		#print "subEventCode:",subEventCode
 		
 		payloadStrList = dataList[3:]
 		advOutList = []
 		tempStr = ''
 		allLen = len(payloadStrList)
 		#print "allLen:",allLen
+		
+		#if subEventCode == 0xd: #extend adv
+			
+		#	return
+		
 		#1. bd addr 
 		offset = 4
+		if subEventCode == 0xd:
+			offset += 1
+			
 		curLen = 6
 		if offset + curLen >= allLen - 1:
 			return None
@@ -438,17 +506,29 @@ class Ble_eventParser:
 		advOutList.append(tempStr)	#empty
 		
 		#3. adv type
-		offset = 3
-		tempStr = "%#.2x " % int(payloadStrList[offset], 16)
-		advOutList.append(tempStr)
-		
+		if subEventCode == 0xd:
+			offset = 2
+			advType = int(payloadStrList[offset], 16) & 0xff
+			advType |= ((int(payloadStrList[offset+1], 16) & 0xff ) << 8)
+			tempStr = "%#.2x " % advType
+			advOutList.append(tempStr)
+		else:
+			offset = 2
+			tempStr = "%#.2x " % int(payloadStrList[offset], 16)
+			advOutList.append(tempStr)
+			
 		#4. Addr type
-		offset = 4
+		offset = 3
+		if subEventCode == 0xd:
+			offset += 1
+		
 		tempStr = "%#.2x " % int(payloadStrList[offset], 16)
 		advOutList.append(tempStr)
 		
 		#5. RSSI
 		offset = allLen - 1
+		if subEventCode == 0xd:
+			offset = 15
 		tempStr = "%d " % int(payloadStrList[offset], 16)
 		advOutList.append(tempStr)
 		
@@ -456,5 +536,18 @@ class Ble_eventParser:
 		tempStr = ''
 		advOutList.append(tempStr)
 		
+		#7 ext adv
+		#"""
+		tempStr = '0'
+		if subEventCode == 0xd:
+			tempStr = '1'
+		
+		advOutList.append(tempStr)
+		#"""
+		
+
 		return advOutList
+		
+		
+			
 		
