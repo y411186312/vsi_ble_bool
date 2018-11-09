@@ -20,6 +20,7 @@ class Ble_CommandMainPage(wx.Panel):
 		
 	def __init__(self,parent, windowSize, mainArgObj):
 		wx.Panel.__init__(self, parent)
+		self._logFile = open('uart_send_log.txt', 'w')
 		self._historyCmdStrList = []
 		self._mainArgObj = mainArgObj
 		
@@ -91,7 +92,10 @@ class Ble_CommandMainPage(wx.Panel):
 		
 		layoutSizer.AddGrowableCol(1, 0)
 		self.mainPanel.SetSizerAndFit(layoutSizer)
-	
+	def _logWrite(self, logStr):
+		self._logFile.write(logStr)
+		self._logFile.flush()
+		
 	def _changeInputPanel(self, cmdStr):
 		needReplace = False
 		proviouePanelIndex = self.curDisplayInputIndex
@@ -167,7 +171,12 @@ class Ble_CommandMainPage(wx.Panel):
 				return
 		
 		#4. send data to uart
+		
 		if self._mainArgObj._uartApiObj.uartOk():	
+			#self._mainArgObj._cmd_buf_add
+			self._mainArgObj._loadSpecObj._cmdInputSave(cmdStr, sendDataList)
+			self._logWrite("\n" + cmdStr + ":" + str(sendDataList))
+			#print "sendDataList:",sendDataList
 			ret = self._mainArgObj._uartApiObj.uartSend(sendDataList)
 			if ret == False:
 				dlg = wx.MessageDialog(None, "Failed to send data, please to check port.", \

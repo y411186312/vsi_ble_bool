@@ -63,7 +63,11 @@ class Ble_getInputClass(wx.Panel):
 			if argListObj._defaultValueList != None :
 				
 				for j in range(curArgCnt):
-					self._valueList[i] += "%.2x"%int(argListObj._defaultValueList[offset+curArgCnt - j - 1], 16)
+					try:
+						self._valueList[i] += "%.2x"%int(argListObj._defaultValueList[offset+curArgCnt - j - 1], 16)
+					except:
+						pass
+						#self._valueList[i] += "00"
 					#self._valueList[i] = argListObj._defaultValueList[offset: offset + 2*curArgCnt]
 			else:
 				self._valueList[i] = '00'*curArgCnt
