@@ -83,9 +83,9 @@ class MainWindow(wx.Frame):
 		
 		sys.exit()
 	def globalClose(self):
-		print "global_close"
+		print "global_close...."
 		if self._mainArgObj._uartRecvThreadObj.isAlive() == True or self._mainArgObj._parserThreadObj.isAlive() == True:
 			self._mainArgObj._threadCtlObj._needQuit = True
 			
 		self._mainArgObj._uartApiObj.uartClose()
-		
+		self._mainArgObj._loadSpecObj._loadClose()

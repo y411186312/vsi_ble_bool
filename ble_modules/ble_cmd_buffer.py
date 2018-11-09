@@ -34,6 +34,7 @@ class cmdBufferOprClass:
 		file_p.close()
 		
 	def _cmd_buf_close(self):
+		print "enter _cmd_buf_close"
 		if len(self._buffer_dic) <= 0:
 			return
 	
