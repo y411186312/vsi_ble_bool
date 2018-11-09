@@ -208,8 +208,13 @@ class Ble_LoadCmdClass:
 		self._cmdBufClsObj = buf_Cls.cmdBufferOprClass(self._cmdDefaultFilePath)
 		self._load_spec_parameters()
 	
+	def _cmdInputSave(self, name, value_list):
+		self._cmdBufClsObj._cmd_buf_add(name, value_list)
+	
 	def _loadClose(self):
+		print "enter _loadClose"
 		self._cmdBufClsObj._cmd_buf_close()
+		
 	
 	def _loadAddDefault(self, name, value_list): #for add default value
 		return	self._cmdBufClsObj. _cmd_buf_add(name, value_list)
@@ -241,8 +246,8 @@ class Ble_LoadCmdClass:
 		for i in range(len(self._returnParaList)):
 			print "name: %s, oprcode:%x" % (self._returnParaList[i]._name, self._returnParaList[i]._oprCode)
 	
-	def	_loadClose(self):
-		buf_Cls
+	#def	_loadClose(self):
+	#	buf_Cls
 		
 		
 	def _load_spec_parameters(self):
