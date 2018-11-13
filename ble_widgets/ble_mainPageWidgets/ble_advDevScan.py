@@ -67,11 +67,25 @@ class Ble_AdvDevScanClass(wx.Frame):
 			self._listObj.SetItem(i, 5, '')
 			self._listObj.SetItemTextColour(i, self.normalColor)
 		
+	#def recursionMarkAdvDevOn(self, bdAddrStrList, connectHandle, role, addrType):
+	#	self._listObj.SetItem(i, 5, roleStr)
+	#	self._listObj.SetItemTextColour(i, self.connectColor)
+	def addDeviceAndMarkAdvDevOn(self, valueList):
+		
+		if len(valueList) != self._listObj.GetColumnCount():
+			return False
+		index = self._listObj.InsertItem(self._listObj.GetItemCount(), 'x')	
+		self._lastListIndex = index
+		for i in range(len(valueList)):
+			self._listObj.SetItem (index, i, valueList[i])
+		self._listObj.SetItemTextColour(index, self.connectColor)
+	
+	
 	
 	def markAdvDevOn(self, bdAddrStrList, connectHandle, role, addrType):
 		#print "markAdvDevOn ----bdAddrStr:",bdAddrStrList
 		#print "markAdvDevOn ----connectHandle:",connectHandle
-		
+		#hasRecurse = False
 		hasFound = False
 		allItem = self._listObj.GetItemCount()
 		for i in range(allItem):
@@ -105,9 +119,11 @@ class Ble_AdvDevScanClass(wx.Frame):
 			if role == 1:
 				roleStr = 'Slave'
 			newList.append(roleStr)
-			self.addDevice(newList)
-			self.markAdvDevOn(bdAddrStrList, connectHandle, role, addrType)
-				
+			newList.append(' ')
+			
+			self.addDeviceAndMarkAdvDevOn(newList)
+			
+		
 	def addDevice(self, valueList):
 		if len(valueList) != self._listObj.GetColumnCount():
 			return False
@@ -141,7 +157,11 @@ class Ble_AdvDevScanClass(wx.Frame):
 			return False
 		if hasFound != True:
 			index = self._listObj.InsertItem(self._listObj.GetItemCount(), 'x')	
+		#self._lastListIndex = index
 		for i in range(len(valueList)):
 			self._listObj.SetItem (index, i, valueList[i])
+			
+		
+		
 		#"""
 		#print "add"	
