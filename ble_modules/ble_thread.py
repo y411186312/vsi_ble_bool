@@ -335,7 +335,7 @@ def thread_parse_data(mainArgObj):
 						mainArgObj._connectionList.append(connectItem)
 						mainArgObj._advDeviceListObj.markAdvDevOn(connectItem._bdAddr, connectItem._connectHandle, connectItem._role, connectItem._peerAddrType)
 						
-				elif packetType == 2 and temMsgObj._direction == 1 and mainArgObj._aclDataTransferObj != None and mainArgObj._aclGuiHasBeenQuited == False: #recv acl
+				elif packetType == 2 and temMsgObj._direction == 1 and mainArgObj._aclDataTransferObj != None and mainArgObj._aclGuiHasBeenQuited == False and mainArgObj._aclIsDataTxGui == False: #recv acl
 					if isAclHeader(temMsgObj._dataList) == True: #first time, should set range
 						
 						payLoadList = temMsgObj._dataList[5:]

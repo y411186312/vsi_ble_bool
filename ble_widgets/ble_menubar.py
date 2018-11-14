@@ -115,8 +115,10 @@ class Ble_MenuBar(wx.Frame):
 		isSend = True
 		if id == 120:
 			#print "Tx"
+			self._mainArgObj._aclIsDataTxGui = True
 			isSend = True
 		elif id == 121:
+			self._mainArgObj._aclIsDataTxGui = False
 			isSend = False
 			print "Rx"
 		else:
