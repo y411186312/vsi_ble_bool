@@ -45,6 +45,7 @@ class MAIN_ARGS_CLASS(object):
 		self._displayStatusObj = None
 		
 		#acl
+		self._aclIsDataTxGui = True
 		self._aclGuiHasBeenQuited = True
 		self._aclRecvHasGotAclHeader = False
 		self._aclDataTransferObj = None
